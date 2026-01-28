@@ -7,6 +7,11 @@ interface REDIS_TYPE {
   REDIS_USERNAME: string;
   REDIS_PASSWORD: string;
 }
+interface CLOUDINARY_TYPE {
+  CLOUDINARY_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_SECRET: string;
+}
 
 interface EnvVar {
   PORT: string;
@@ -19,6 +24,7 @@ interface EnvVar {
   BCRYPT_SALT_ROUND: string;
   EXPRESS_SESSION_SECRET: string;
   REDIS: REDIS_TYPE;
+  CLOUDINARY: CLOUDINARY_TYPE;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -36,6 +42,9 @@ const loadEnvVariables = (): EnvVar => {
     "REDIS_PORT",
     "REDIS_USERNAME",
     "REDIS_PASSWORD",
+    "CLOUDINARY_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_SECRET",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -58,6 +67,11 @@ const loadEnvVariables = (): EnvVar => {
       REDIS_PORT: process.env.REDIS_PORT as string,
       REDIS_USERNAME: process.env.REDIS_USERNAME as string,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
+    },
+    CLOUDINARY: {
+      CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
+      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+      CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET as string,
     },
   };
 };
