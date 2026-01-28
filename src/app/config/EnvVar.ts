@@ -1,3 +1,13 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+interface REDIS_TYPE {
+  REDIS_HOST: string;
+  REDIS_PORT: string;
+  REDIS_USERNAME: string;
+  REDIS_PASSWORD: string;
+}
+
 interface EnvVar {
   PORT: string;
   MONGODB_URL: string;
@@ -8,6 +18,7 @@ interface EnvVar {
   JWT_REFRESH_EXPIRATION_DAYS: string;
   BCRYPT_SALT_ROUND: string;
   EXPRESS_SESSION_SECRET: string;
+  REDIS: REDIS_TYPE;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -21,6 +32,10 @@ const loadEnvVariables = (): EnvVar => {
     "JWT_REFRESH_EXPIRATION_DAYS",
     "BCRYPT_SALT_ROUND",
     "EXPRESS_SESSION_SECRET",
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_USERNAME",
+    "REDIS_PASSWORD",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -38,6 +53,13 @@ const loadEnvVariables = (): EnvVar => {
       .JWT_REFRESH_EXPIRATION_DAYS as string,
     BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
     EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
+    REDIS: {
+      REDIS_HOST: process.env.REDIS_HOST as string,
+      REDIS_PORT: process.env.REDIS_PORT as string,
+      REDIS_USERNAME: process.env.REDIS_USERNAME as string,
+      REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
+    },
   };
 };
+
 export const envVar = loadEnvVariables();
