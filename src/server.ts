@@ -3,6 +3,7 @@ import { Server as SocketIoServer } from "socket.io";
 import app from "./app";
 import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
+import { setIo } from "./app/config/socket";
 
 const server = http.createServer(app);
 
@@ -13,6 +14,8 @@ const io = new SocketIoServer(server, {
     credentials: true,
   },
 });
+
+setIo(io);
 
 io.on("connection", (socket) => {
   console.log("✅ New Client connected:", socket.id);
