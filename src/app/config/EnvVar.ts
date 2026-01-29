@@ -1,3 +1,18 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+interface REDIS_TYPE {
+  REDIS_HOST: string;
+  REDIS_PORT: string;
+  REDIS_USERNAME: string;
+  REDIS_PASSWORD: string;
+}
+interface CLOUDINARY_TYPE {
+  CLOUDINARY_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_SECRET: string;
+}
+
 interface EnvVar {
   PORT: string;
   MONGODB_URL: string;
@@ -8,6 +23,9 @@ interface EnvVar {
   JWT_REFRESH_EXPIRATION_DAYS: string;
   BCRYPT_SALT_ROUND: string;
   EXPRESS_SESSION_SECRET: string;
+  FRONTEND_URL: string;
+  REDIS: REDIS_TYPE;
+  CLOUDINARY: CLOUDINARY_TYPE;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -21,6 +39,14 @@ const loadEnvVariables = (): EnvVar => {
     "JWT_REFRESH_EXPIRATION_DAYS",
     "BCRYPT_SALT_ROUND",
     "EXPRESS_SESSION_SECRET",
+    "FRONTEND_URL",
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_USERNAME",
+    "REDIS_PASSWORD",
+    "CLOUDINARY_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_SECRET",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -38,6 +64,19 @@ const loadEnvVariables = (): EnvVar => {
       .JWT_REFRESH_EXPIRATION_DAYS as string,
     BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
     EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
+    FRONTEND_URL: process.env.FRONTEND_URL as string,
+    REDIS: {
+      REDIS_HOST: process.env.REDIS_HOST as string,
+      REDIS_PORT: process.env.REDIS_PORT as string,
+      REDIS_USERNAME: process.env.REDIS_USERNAME as string,
+      REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
+    },
+    CLOUDINARY: {
+      CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
+      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+      CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET as string,
+    },
   };
 };
+
 export const envVar = loadEnvVariables();
