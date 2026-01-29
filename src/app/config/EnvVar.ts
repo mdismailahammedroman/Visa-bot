@@ -23,6 +23,7 @@ interface EnvVar {
   JWT_REFRESH_EXPIRATION_DAYS: string;
   BCRYPT_SALT_ROUND: string;
   EXPRESS_SESSION_SECRET: string;
+  FRONTEND_URL: string;
   REDIS: REDIS_TYPE;
   CLOUDINARY: CLOUDINARY_TYPE;
 }
@@ -38,6 +39,7 @@ const loadEnvVariables = (): EnvVar => {
     "JWT_REFRESH_EXPIRATION_DAYS",
     "BCRYPT_SALT_ROUND",
     "EXPRESS_SESSION_SECRET",
+    "FRONTEND_URL",
     "REDIS_HOST",
     "REDIS_PORT",
     "REDIS_USERNAME",
@@ -62,6 +64,7 @@ const loadEnvVariables = (): EnvVar => {
       .JWT_REFRESH_EXPIRATION_DAYS as string,
     BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
     EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
+    FRONTEND_URL: process.env.FRONTEND_URL as string,
     REDIS: {
       REDIS_HOST: process.env.REDIS_HOST as string,
       REDIS_PORT: process.env.REDIS_PORT as string,
