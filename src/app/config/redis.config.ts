@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "redis";
 import { envVar } from "./EnvVar";
 
@@ -18,6 +19,5 @@ redisClient.on("error", (error: any) =>
 export const connectRedis = async () => {
   if (!redisClient.isOpen) {
     await redisClient.connect();
-    console.log("Redis connected");
   }
 };

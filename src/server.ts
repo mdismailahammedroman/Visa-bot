@@ -3,6 +3,8 @@ import { Server as SocketIoServer } from "socket.io";
 import app from "./app";
 import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
+import { setIo } from "./app/config/socket";
+import { connectRedis } from "./app/config/redis.config";
 
 const server = http.createServer(app);
 
@@ -13,6 +15,8 @@ const io = new SocketIoServer(server, {
     credentials: true,
   },
 });
+
+setIo(io);
 
 io.on("connection", (socket) => {
   console.log("✅ New Client connected:", socket.id);
@@ -29,6 +33,7 @@ io.on("connection", (socket) => {
 
 async function bootstrap() {
   await connectDB();
+  await connectRedis();
   server.listen(envVar.PORT, () =>
     console.log(`🚀 Server running on port ${envVar.PORT}`),
   );

@@ -12,6 +12,14 @@ interface CLOUDINARY_TYPE {
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_SECRET: string;
 }
+interface SMTP_TYPE {
+  SMTP_HOST: string;
+  SMTP_PORT: string;
+  SMTP_USER: string;
+  SMTP_PASSWORD: string;
+  SMTP_FROM_EMAIL?: string;
+  SMTP_FROM_NAME?: string;
+}
 
 interface EnvVar {
   PORT: string;
@@ -26,6 +34,7 @@ interface EnvVar {
   FRONTEND_URL: string;
   REDIS: REDIS_TYPE;
   CLOUDINARY: CLOUDINARY_TYPE;
+  SMTP: SMTP_TYPE;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -47,6 +56,12 @@ const loadEnvVariables = (): EnvVar => {
     "CLOUDINARY_NAME",
     "CLOUDINARY_API_KEY",
     "CLOUDINARY_SECRET",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASSWORD",
+    "SMTP_FROM_EMAIL",
+    "SMTP_FROM_NAME",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -75,6 +90,14 @@ const loadEnvVariables = (): EnvVar => {
       CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
       CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
       CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET as string,
+    },
+    SMTP: {
+      SMTP_HOST: process.env.SMTP_HOST as string,
+      SMTP_PORT: process.env.SMTP_PORT as string,
+      SMTP_USER: process.env.SMTP_USER as string,
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
+      SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL as string,
+      SMTP_FROM_NAME: process.env.SMTP_FROM_NAME as string,
     },
   };
 };
