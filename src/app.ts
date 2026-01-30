@@ -8,6 +8,7 @@ import notFound from "./app/middlewares/notFound";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import { envVar } from "./app/config/EnvVar";
 import { router } from "./app/routes";
+import passport from "./app/config/passport";
 
 const app: Application = express();
 
@@ -26,6 +27,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(passport.initialize());
 
 // ✅ health endpoints
 app.get("/health/live", (req: Request, res: Response) => {
