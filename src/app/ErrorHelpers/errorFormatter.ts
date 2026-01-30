@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import AppError from "./AppError";
 import { handleMongooseError } from "./handleMongooseError";
 import { handleZodError } from "./handleZodError";

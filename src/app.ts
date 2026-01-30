@@ -8,7 +8,7 @@ import notFound from "./app/middlewares/notFound";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import { envVar } from "./app/config/EnvVar";
 import { router } from "./app/routes";
-import passport from "./app/config/passport";
+import passport from "./app/config/passport.config";
 
 const app: Application = express();
 

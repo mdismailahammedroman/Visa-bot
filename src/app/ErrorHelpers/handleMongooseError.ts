@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import AppError from "./AppError";
 
 export const handleMongooseError = (err: any) => {
