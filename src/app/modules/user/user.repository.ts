@@ -7,7 +7,7 @@ const findByEmail = (email: string) => {
 
 const findByEmailWithPassword = (email: string) => {
   return User.findOne({ email: email.toLowerCase() })
-    .select("+passwordHash")
+    .select("+password")
     .exec();
 };
 

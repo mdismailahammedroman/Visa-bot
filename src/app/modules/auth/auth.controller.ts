@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
@@ -6,8 +7,13 @@ import { StatusCodes } from "http-status-codes";
 import { createUserTokens } from "../../utils/authToken";
 import { sendResponse } from "../../utils/sendResponse";
 import { CatchAsync } from "../../utils/CatchAsync";
+import { authService } from "./auth.service";
 
-export const credentialLogin = CatchAsync(
+// ========================================================================================================================================
+//                     use passport to user credentialLogin
+// ========================================================================================================================================
+
+const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) return next(err);
@@ -37,6 +43,31 @@ export const credentialLogin = CatchAsync(
   },
 );
 
+// ========================================================================================================================================
+//                     use passport to user google login
+// ========================================================================================================================================
+
+// ========================================================================================================================================
+//                     use passport to user apple login
+// ========================================================================================================================================
+
+// ========================================================================================================================================
+//                     forgot password controller
+// ========================================================================================================================================
+const forgotPassword = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const result = await authService.forgotPassword(email);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Forgot password endpoint working",
+      data: result,
+    });
+  },
+);
+
 export const authController = {
   credentialLogin,
+  forgotPassword,
 };

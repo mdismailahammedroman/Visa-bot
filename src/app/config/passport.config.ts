@@ -17,6 +17,9 @@ passport.use(
         if (!isMatch) {
           return done(null, false, { message: "Incorrect password" });
         }
+        if (!password || !user.password) {
+          return done(null, false, { message: "Password is missing" });
+        }
 
         return done(null, user);
       } catch (error) {

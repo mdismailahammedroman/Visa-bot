@@ -9,8 +9,11 @@ export const renderTemplate = (
 ) => {
   const filePath = path.join(__dirname, "templates", `${templateName}.hbs`);
 
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Template not found: ${filePath}`);
+  }
+
   const source = fs.readFileSync(filePath, "utf-8");
   const template = Handlebars.compile(source);
-
   return template(data);
 };
