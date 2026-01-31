@@ -12,8 +12,7 @@ export const checkAuth =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // const authHeader = req.headers.authorization; // Get the Authorization header
-      const token =
-        req.cookies.accessToken || req.headers.authorization?.split("")[0];
+      const token = req.cookies.accessToken;
       if (!token)
         throw new AppError(httpStatus.UNAUTHORIZED, "Token not provided!");
 

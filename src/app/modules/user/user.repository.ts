@@ -52,6 +52,9 @@ const updateUserByEmail = (email: string, update: Partial<IUser>) => {
   }).exec();
 };
 
+const invalidateToken = async (userId: string) => {
+  return await User.findByIdAndUpdate(userId, { refreshToken: null });
+};
 export const userRepository = {
   findByEmail,
   findByEmailWithPassword,
@@ -60,4 +63,5 @@ export const userRepository = {
   updatePasswordByEmail,
   updateStatusByEmail,
   updateUserByEmail,
+  invalidateToken,
 };

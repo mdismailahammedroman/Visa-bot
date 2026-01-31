@@ -4,10 +4,13 @@ import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
-import { createUserTokens } from "../../utils/authToken";
+
 import { sendResponse } from "../../utils/sendResponse";
 import { CatchAsync } from "../../utils/CatchAsync";
 import { authService } from "./auth.service";
+import { clearAuthCookies, setAuthCookie } from "../../utils/setAuthCookies";
+import { createUserTokens } from "../../utils/authToken";
+import { JwtPayload } from "../../types/auth.types";
 
 // ========================================================================================================================================
 //                     use passport to user credentialLogin
@@ -26,8 +29,8 @@ const credentialLogin = CatchAsync(
 
       // create access + refresh tokens
       const userTokens = await createUserTokens(user);
-
-      // TODO: add login activity logic here
+      // ✅ set cookies
+      setAuthCookie(res, userTokens);
 
       // send response with tokens
       return sendResponse(res, {
@@ -79,8 +82,35 @@ const resetPassword = CatchAsync(
     });
   },
 );
+const logout = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // check user
+    if (!req.user) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    // get userId from JwtPayload
+    const userId = req.user as JwtPayload;
+
+    // invalidate tokens in DB
+    const result = await authService.logout(userId.userId);
+
+    // clear cookies
+    clearAuthCookies(res);
+
+    // send response
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      message: "Logout successful",
+      success: true,
+      data: result,
+    });
+  },
+);
+
 export const authController = {
   credentialLogin,
   forgotPassword,
   resetPassword,
+  logout,
 };

@@ -44,7 +44,13 @@ const resetPassword = async (email: string, newPassword: string) => {
   return updatedUser;
 };
 
+const logout = async (userId: string) => {
+  await userRepository.invalidateToken(userId);
+  return { message: "User logged out successfully" };
+};
+
 export const authService = {
   forgotPassword,
   resetPassword,
+  logout,
 };
