@@ -1,4 +1,5 @@
-import { TCreateUserPayload, UserStatus } from "./user.interface";
+import { hashPassword } from "../../helpers/passwordHelper";
+import { IUser, TCreateUserPayload, UserStatus } from "./user.interface";
 import { User } from "./user.model";
 
 const findByEmail = (email: string) => {
@@ -31,10 +32,36 @@ const updateStatusByEmail = (email: string, status: UserStatus) => {
   ).exec();
 };
 
+const updatePasswordByEmail = async (email: string, newPassword: string) => {
+  // Hash the password
+  const hashedPassword = await hashPassword(newPassword);
+
+  // Update user
+  const updatedUser = await User.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    { password: hashedPassword },
+    { new: true }, // returns the updated document
+  ).select("+password"); // include password if needed for verification
+
+  return updatedUser;
+};
+
+const updateUserByEmail = (email: string, update: Partial<IUser>) => {
+  return User.findOneAndUpdate({ email: email.toLowerCase() }, update, {
+    new: true,
+  }).exec();
+};
+
+const invalidateToken = async (userId: string) => {
+  return await User.findByIdAndUpdate(userId, { refreshToken: null });
+};
 export const userRepository = {
   findByEmail,
   findByEmailWithPassword,
   findById,
   register,
+  updatePasswordByEmail,
   updateStatusByEmail,
+  updateUserByEmail,
+  invalidateToken,
 };

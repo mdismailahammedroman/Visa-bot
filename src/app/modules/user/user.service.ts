@@ -3,6 +3,7 @@ import AppError from "../../ErrorHelpers/AppError";
 import { TCreateUserPayload } from "./user.interface";
 import { userRepository } from "./user.repository";
 import { hashPassword } from "../../helpers/passwordHelper";
+import { otpService } from "../Otp/otp.service";
 
 const registerUser = async (payload: TCreateUserPayload) => {
   const existingUser = await userRepository.findByEmail(payload.email);
@@ -16,7 +17,7 @@ const registerUser = async (payload: TCreateUserPayload) => {
     ...payload,
     password: passwordHash,
   });
-
+  await otpService.sendOtp(newUser.email, "NEW_USER_VERIFY", newUser.name);
   return newUser; // remove password before sending
 };
 
