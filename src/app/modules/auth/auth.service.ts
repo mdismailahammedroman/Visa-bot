@@ -1,6 +1,7 @@
 import { userRepository } from "../user/user.repository";
 import AppError from "../../ErrorHelpers/AppError";
 import { otpService } from "../Otp/otp.service";
+import { StatusCodes } from "http-status-codes";
 
 const forgotPassword = async (email: string) => {
   // 1️⃣ Check if user exists
@@ -18,7 +19,7 @@ const forgotPassword = async (email: string) => {
   }
 
   // 4️⃣ Send OTP for forgot password
-  const data = await otpService.sendOtp(email, user.name);
+  const data = await otpService.sendOtp(email, "FORGOT_PASSWORD", user.name);
 
   // 5️⃣ Return response
   return {
@@ -27,6 +28,23 @@ const forgotPassword = async (email: string) => {
   };
 };
 
+const resetPassword = async (email: string, newPassword: string) => {
+  // Check if user exists
+  const user = await userRepository.findByEmail(email);
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User does not exist");
+  }
+
+  // Update password — MUST await
+  const updatedUser = await userRepository.updatePasswordByEmail(
+    email,
+    newPassword,
+  );
+
+  return updatedUser;
+};
+
 export const authService = {
   forgotPassword,
+  resetPassword,
 };
