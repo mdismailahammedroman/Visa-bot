@@ -19,7 +19,7 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 // recommended: set real origins later (not true)
 app.use(
   cors({
-    origin: envVar.FRONTEND_URL,
+    origin: envVar.FRONTEND_URL || false, // explicitly disable CORS if not configured
     credentials: true,
   }),
 );

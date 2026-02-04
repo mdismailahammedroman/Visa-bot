@@ -21,3 +21,14 @@ export const connectRedis = async () => {
     await redisClient.connect();
   }
 };
+
+export const disconnectRedis = async () => {
+  try {
+    if (redisClient?.isOpen) {
+      await redisClient.quit(); // graceful shutdown
+      console.log("Redis disconnected");
+    }
+  } catch (error) {
+    console.error("Error disconnecting Redis:", error);
+  }
+};

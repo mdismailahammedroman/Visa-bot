@@ -97,7 +97,7 @@ export const verifyOTP = async ({ email, otp, purpose }: VerifyOtpPayload) => {
   switch (purpose) {
     case "NEW_USER_VERIFY":
     case "VERIFY_EMAIL": {
-      const updatedUser = await userRepository.updateUserByEmail(lowerEmail, {
+      const updatedUser = await userRepository.verifyOtpByEmail(lowerEmail, {
         is_verified: true,
         status: UserStatus.ACTIVE,
       });

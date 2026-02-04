@@ -1,5 +1,11 @@
 import { Schema, model } from "mongoose";
-import { IAuthProvider, IUser, Role, UserStatus } from "./user.interface";
+import {
+  GENDER_TYPE,
+  IAuthProvider,
+  IUser,
+  Role,
+  UserStatus,
+} from "./user.interface";
 
 const authProviderSchema = new Schema<IAuthProvider>(
   {
@@ -50,6 +56,15 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: "",
     },
+
+    gender: {
+      type: [String],
+      enum: Object.values(GENDER_TYPE),
+      default: [],
+    },
+
+    mobile: { type: String, default: "" },
+    location: { type: String, default: "" },
 
     auth_providers: {
       type: [authProviderSchema],

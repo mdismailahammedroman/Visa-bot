@@ -21,12 +21,20 @@ export enum Role {
   USER = "USER",
 }
 
+export enum GENDER_TYPE {
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+}
+
 export interface IUser {
   _id: string;
   name: string;
   email: string;
   password: string;
   status: UserStatus;
+  gender?: GENDER_TYPE;
+  mobile?: string;
+  location?: string;
   profile_picture?: string;
   coverPicture?: string;
   auth_providers: IAuthProvider[];
@@ -43,4 +51,13 @@ export type TCreateUserPayload = {
   name: string;
   email: string;
   password: string;
+};
+
+export type TUpdateUserProfile = {
+  name: string;
+  profile_picture: string;
+  coverPicture: string;
+  gender: GENDER_TYPE;
+  mobile?: string;
+  location?: string;
 };

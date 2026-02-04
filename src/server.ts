@@ -4,7 +4,7 @@ import app from "./app";
 import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
 import { setIo } from "./app/config/socket";
-import { connectRedis } from "./app/config/redis.config";
+import { connectRedis, disconnectRedis } from "./app/config/redis.config";
 
 const server = http.createServer(app);
 
@@ -39,7 +39,10 @@ async function bootstrap() {
   );
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error("❌ Failed to start server:", err);
+  process.exit(1);
+});
 
 let isShuttingDown = false;
 
@@ -53,6 +56,7 @@ async function shutdown(exitCode: number, reason?: string) {
     try {
       io.close();
       await disconnectDB();
+      await disconnectRedis();
       console.log("✅ Server closed gracefully.");
       process.exit(exitCode);
     } catch (e) {

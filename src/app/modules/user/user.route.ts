@@ -1,9 +1,22 @@
 import { Router } from "express";
 import { userController } from "./user.controller";
+import { validateRequest } from "../../helpers/validateRequest";
+import { checkAuth } from "../../middlewares/checkAuth.middleware";
+import { registerUserZodSchema, updateUserZodSchema } from "./user.validation";
 
 export const router = Router();
+router.post(
+  "/register",
+  validateRequest(registerUserZodSchema),
+  userController.registerUser,
+);
 
-router.post("/register", userController.registerUser);
+router.patch(
+  "/update-user",
+  checkAuth(),
+  validateRequest(updateUserZodSchema),
+  userController.updateUser,
+);
 
 export const userRouter = router;
 

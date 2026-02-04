@@ -7,7 +7,7 @@ import { StatusCodes } from "http-status-codes";
 
 export const createUserTokens = async (user: IUser) => {
   const payload: JwtPayload = {
-    userId: user._id,
+    userId: user._id.toString(),
     role: user.role as Role,
     email: user.email,
   };
@@ -24,10 +24,7 @@ export const createUserTokens = async (user: IUser) => {
     envVar.JWT_REFRESH_EXPIRATION_DAYS,
   );
 
-  return {
-    accessToken,
-    refreshToken,
-  };
+  return { accessToken, refreshToken };
 };
 
 export const refreshUserToken = async (refreshToken: string) => {
@@ -35,24 +32,14 @@ export const refreshUserToken = async (refreshToken: string) => {
     refreshToken,
     envVar.JWT_REFRESH_SECRET,
   ) as JwtPayload;
-  if (!payload) {
+
+  if (!payload?.userId) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid refresh Token!");
   }
 
-  const newAccessToken = generateToken(
-    {
-      userId: payload.userId,
-      role: payload.role,
-      email: payload.email,
-    },
+  return generateToken(
+    { userId: payload.userId, role: payload.role, email: payload.email },
     envVar.JWT_SECRET,
     envVar.JWT_EXPIRES_IN,
   );
-
-  return newAccessToken;
-};
-
-export const decodeToken = (token: string) => {
-  const decoded = decodeToken(token) as JwtPayload;
-  return decoded;
 };

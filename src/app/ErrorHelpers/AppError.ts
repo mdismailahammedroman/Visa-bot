@@ -1,15 +1,15 @@
 class AppError extends Error {
-  public statusCode: number; // HTTP status code রাখা হবে এখানে (যেমন 400, 404, 500)
+  public statusCode: number;
 
   constructor(statusCode: number, message: string, stack = "") {
-    super(message); // Error base class এ message পাঠানো
-    this.statusCode = statusCode; // statusCode সেট করা
+    super(message);
+    this.statusCode = statusCode;
 
-    if (!stack) {
-      this.stack = stack; // যদি stack দেওয়া হয় সেট করা
-    } else {
-      Error.captureStackTrace(this, this.constructor); // এটি call stack ঠিক রাখে
+    if (stack) {
+      this.stack = stack;
+    } else if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
     }
   }
 }
-export default AppError; // অন্য ফাইল থেকে ব্যবহার করার জন্য export
+export default AppError;
