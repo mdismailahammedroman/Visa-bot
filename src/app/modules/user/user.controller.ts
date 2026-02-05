@@ -47,7 +47,21 @@ const updateUser = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getByMySelf = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  const userId = user.userId;
+  const result = await userService.getByMySelf(userId);
+
+  // Optional: password is already hidden by schema
+  sendResponse(res, {
+    success: true,
+    message: "user update successfully",
+    statusCode: StatusCodes.OK,
+    data: result,
+  });
+});
 export const userController = {
   registerUser,
   updateUser,
+  getByMySelf,
 };

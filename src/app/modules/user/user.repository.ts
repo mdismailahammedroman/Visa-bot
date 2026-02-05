@@ -61,10 +61,7 @@ const verifyOtpByEmail = (email: string, update: Partial<IUser>) => {
   ).exec();
 };
 // updateUserById
-const updateUserById = (
-  userId: string,
-  update: Partial<TUpdateUserProfile>,
-) => {
+const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
   return User.findByIdAndUpdate(
     userId,
     { $set: update },
@@ -83,6 +80,6 @@ export const userRepository = {
   updatePasswordByEmail,
   updateStatusByEmail,
   verifyOtpByEmail,
-  updateUserById,
+  updateUser,
   invalidateToken,
 };

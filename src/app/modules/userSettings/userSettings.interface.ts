@@ -9,6 +9,7 @@ export interface IUserSettings {
   notifications_enabled: boolean;
   app_notifications: boolean;
   email_notifications: boolean;
+  currency: string;
   dark_mode: boolean;
 
   createdAt: Date;

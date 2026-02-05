@@ -1,6 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
-import { TCreateUserPayload, TUpdateUserProfile } from "./user.interface";
+import {
+  TCreateUserPayload,
+  TUpdateUserProfile,
+  UserStatus,
+} from "./user.interface";
 import { userRepository } from "./user.repository";
 import { hashPassword } from "../../helpers/passwordHelper";
 import { otpService } from "../Otp/otp.service";
@@ -25,13 +30,44 @@ const updateUser = async (
   userId: string,
   update: Partial<TUpdateUserProfile>,
 ) => {
-  const updatedUser = await userRepository.updateUserById(userId, update);
+  const user = await userRepository.findById(userId);
 
-  if (!updatedUser) {
+  if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
   }
+
+  // Check if user is verified
+  if (!user.is_verified) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "User is not verified");
+  }
+
+  // Check if user status is ACTIVE
+  if (user.status !== UserStatus.ACTIVE) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "User is not active");
+  }
+  const updatedUser = await userRepository.updateUser(userId, update);
 
   return updatedUser;
 };
 
-export const userService = { registerUser, updateUser };
+const getByMySelf = async (userId: string) => {
+  const user = await userRepository.findById(userId);
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not Found");
+  }
+  // Check if user is verified
+  if (!user.is_verified) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "User is not verified");
+  }
+
+  // Check if user status is ACTIVE
+  if (user.status !== UserStatus.ACTIVE) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "User is not active");
+  }
+
+  user.password = undefined as any;
+
+  return user;
+};
+
+export const userService = { registerUser, updateUser, getByMySelf };
