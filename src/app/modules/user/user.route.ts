@@ -29,6 +29,8 @@ router.get(
   userController.getAllUsers,
 );
 
+router.get("/:userId", checkAuth(), userController.getUserProfileByIdForAdmin);
+
 export const userRouter = router;
 
 // | # | Method | Endpoint                      | Auth Required | Description                |

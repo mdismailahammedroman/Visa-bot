@@ -3,8 +3,10 @@ import {
   GENDER_TYPE,
   IAuthProvider,
   IUser,
+  PaymentStatus,
   Role,
   UserStatus,
+  VisaStatus,
 } from "./user.interface";
 
 const authProviderSchema = new Schema<IAuthProvider>(
@@ -61,6 +63,22 @@ const userSchema = new Schema<IUser>(
       type: [String],
       enum: Object.values(GENDER_TYPE),
       default: [],
+    },
+
+    visaStatus: {
+      type: String,
+      enum: Object.values(VisaStatus),
+      default: "PENDING",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: Object.values(PaymentStatus),
+      default: "UNPAID",
+    },
+
+    lastLoginAt: {
+      type: Date,
     },
 
     mobile: { type: String, default: "" },

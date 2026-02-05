@@ -1,4 +1,4 @@
-import httpStatus, { StatusCodes } from "http-status-codes";
+import httpStatus from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import AppError from "../ErrorHelpers/AppError";
@@ -7,59 +7,64 @@ import { envVar } from "../config/EnvVar";
 import { User } from "../modules/user/user.model";
 import { UserStatus } from "../modules/user/user.interface";
 
+interface AuthJwtPayload extends JwtPayload {
+  userId: string;
+  role: string;
+}
+
 export const checkAuth =
-  (...restRole: string[]) =>
+  (...allowedRoles: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // const authHeader = req.headers.authorization; // Get the Authorization header
-      const token = req.cookies.accessToken;
-      
-      if (!token)
-        throw new AppError(httpStatus.UNAUTHORIZED, "Token not provided!");
+      const token = req.cookies?.accessToken;
 
-      // Extract the token from the Authorization header
-
-      // VERIFY ACCESS TOKEN
-      const verifyUser = verifyToken(token, envVar.JWT_SECRET) as JwtPayload;
-
-      // CHECK Verified
-      if (!verifyUser) {
-        throw new AppError(httpStatus.UNAUTHORIZED, "Invalid token!");
-      }
-
-      // Check if the user exists in the database
-      const isUser = await User.findById(verifyUser?.userId);
-
-      if (!isUser) {
-        throw new AppError(httpStatus.UNAUTHORIZED, "No user found!");
-      }
-
-      // Check if the user's status is either INACTIVE or BANNED
-      if (
-        isUser.status === UserStatus.BLOCKED ||
-        isUser.status === UserStatus.PENDING
-      ) {
+      if (!token) {
         throw new AppError(
-          StatusCodes.BAD_REQUEST,
-          `User is ${isUser.status} and cannot access the system.`,
+          httpStatus.UNAUTHORIZED,
+          "Access token not provided",
         );
       }
 
-      // Check if the user is deleted
-      if (isUser.isDeleted) {
-        throw new AppError(httpStatus.FORBIDDEN, "The user was deleted!");
+      // ✅ Verify token
+      const decoded = verifyToken(token, envVar.JWT_SECRET) as AuthJwtPayload;
+
+      if (!decoded?.userId) {
+        throw new AppError(httpStatus.UNAUTHORIZED, "Invalid or expired token");
       }
 
-      // Check if the user has the required role to access the route
-      if (restRole.length && !restRole.includes(verifyUser.role)) {
+      // ✅ Check user exists
+      const user = await User.findById(decoded.userId);
+
+      if (!user) {
+        throw new AppError(httpStatus.UNAUTHORIZED, "User not found");
+      }
+
+      // ✅ Status check
+      if (
+        user.status === UserStatus.BLOCKED ||
+        user.status === UserStatus.PENDING
+      ) {
+        throw new AppError(httpStatus.FORBIDDEN, `User is ${user.status}`);
+      }
+
+      // ✅ Deleted check
+      if (user.isDeleted) {
         throw new AppError(
           httpStatus.FORBIDDEN,
-          "You are not permitted to access this route!",
+          "User account has been deleted",
         );
       }
 
-      // Add the verified user to the request object
-      req.user = verifyUser;
+      // ✅ Role-based authorization
+      if (allowedRoles.length && !allowedRoles.includes(decoded.role)) {
+        throw new AppError(
+          httpStatus.FORBIDDEN,
+          "You are not authorized to access this route",
+        );
+      }
+
+      // ✅ Attach user to request
+      req.user = decoded;
 
       next();
     } catch (error) {

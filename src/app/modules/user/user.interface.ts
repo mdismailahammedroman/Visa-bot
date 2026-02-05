@@ -26,20 +26,42 @@ export enum GENDER_TYPE {
   FEMALE = "FEMALE",
 }
 
+export enum PaymentStatus {
+  PAID = "PAID",
+  UNPAID = "UNPAID",
+  PENDING = "PENDING",
+}
+
+export enum VisaStatus {
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  PENDING = "PENDING",
+}
+
 export interface IUser {
   _id: string;
   name: string;
   email: string;
   password: string;
+
   status: UserStatus;
+  role: Role;
+
   gender?: GENDER_TYPE;
   mobile?: string;
   location?: string;
+
   profile_picture?: string;
   coverPicture?: string;
+
+  visaStatus?: VisaStatus;
+  paymentStatus?: PaymentStatus;
+
+  lastLoginAt?: Date;
+
   auth_providers: IAuthProvider[];
   fcmTokens?: string[];
-  role: Role;
+
   is_verified: boolean;
   isDeleted: boolean;
 

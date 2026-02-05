@@ -7,6 +7,8 @@ import { userService } from "./user.service";
 import { StatusCodes } from "http-status-codes";
 
 import { TUpdateUserProfile } from "./user.interface";
+import AppError from "../../ErrorHelpers/AppError";
+import { User } from "./user.model";
 
 const registerUser = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -76,6 +78,21 @@ const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getUserProfileByIdForAdmin = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    const result = await userService.getUserProfileForAdmin(userId as string);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "User profile fetched successfully",
+      data: result,
+    });
+  },
+);
+
 // userController/
 
 export const userController = {
@@ -83,4 +100,5 @@ export const userController = {
   updateUser,
   getByMySelf,
   getAllUsers,
+  getUserProfileByIdForAdmin,
 };

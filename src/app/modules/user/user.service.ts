@@ -79,9 +79,45 @@ const getAllUsersForAdmin = async (
   return users;
 };
 
+const getUserProfileForAdmin = async (userId: string) => {
+  const user = await userRepository.findById(userId);
+
+  if (!user || user.isDeleted) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    gender: user.gender,
+    mobile: user.mobile,
+    location: user.location,
+
+    profile_picture: user.profile_picture,
+    coverPicture: user.coverPicture,
+
+    status: user.status,
+    role: user.role,
+
+    visaStatus: user.visaStatus,
+    paymentStatus: user.paymentStatus,
+
+    memberSince: user.createdAt,
+    lastLogin: user.lastLoginAt,
+
+    accountActions: {
+      canResetPassword: true,
+      canDeleteAccount: true,
+      canBlockUser: true,
+    },
+  };
+};
+
 export const userService = {
   registerUser,
   updateUser,
   getByMySelf,
   getAllUsersForAdmin,
+  getUserProfileForAdmin,
 };
