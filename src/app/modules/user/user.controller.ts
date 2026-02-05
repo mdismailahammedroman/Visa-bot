@@ -47,6 +47,8 @@ const updateUser = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// getByMySelf/
+
 const getByMySelf = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
   const userId = user.userId;
@@ -60,8 +62,25 @@ const getByMySelf = CatchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+// getAllUsers
+
+const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
+  const users = await userService.getAllUsersForAdmin(req.query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "All users fetched successfully",
+    data: users,
+  });
+});
+
+// userController/
+
 export const userController = {
   registerUser,
   updateUser,
   getByMySelf,
+  getAllUsers,
 };

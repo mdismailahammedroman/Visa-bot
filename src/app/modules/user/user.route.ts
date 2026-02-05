@@ -23,6 +23,11 @@ router.get(
   checkAuth(...Object.values(Role)),
   userController.getByMySelf,
 );
+router.get(
+  "/all-users",
+  checkAuth(...Object.values(Role)),
+  userController.getAllUsers,
+);
 
 export const userRouter = router;
 
@@ -35,3 +40,25 @@ export const userRouter = router;
 // | 5 | POST   | /api/v1/users/change-password | Yes           | Change password            |
 // | 6 | GET    | /api/v1/users                 | Yes (Admin)   | List all users             |
 // | 7 | POST   | /api/v1/users/logout          | Yes           | Logout user                |
+// router.get(
+//   "/profile/:userId",
+//   checkAuth(Role.ADMIN),
+//   userController.getProfile,
+// );
+// router.get("/", checkAuth(Role.ADMIN), userController.getAllUser);
+// router.patch(
+//   "/update-user",
+//   // multerUpload.single("coverPicture"),
+//   // multerUpload.single("profile_picture"),
+//   multerUpload.fields([
+//     { name: "coverPicture", maxCount: 1 },
+//     { name: "profile_picture", maxCount: 1 },
+//   ]),
+//   checkAuth(Role.USER, Role.ADMIN),
+//   userController.userUpdate,
+// );
+// router.delete(
+//   "/:userId",
+//   checkAuth(...Object.keys(Role)),
+//   userController.userDelete,
+// );

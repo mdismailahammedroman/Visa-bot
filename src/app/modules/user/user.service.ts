@@ -2,6 +2,7 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
 import {
+  IUser,
   TCreateUserPayload,
   TUpdateUserProfile,
   UserStatus,
@@ -9,6 +10,7 @@ import {
 import { userRepository } from "./user.repository";
 import { hashPassword } from "../../helpers/passwordHelper";
 import { otpService } from "../Otp/otp.service";
+import { QueryParams } from "../../utils/queryBuilder";
 
 const registerUser = async (payload: TCreateUserPayload) => {
   const existingUser = await userRepository.findByEmail(payload.email);
@@ -70,4 +72,16 @@ const getByMySelf = async (userId: string) => {
   return user;
 };
 
-export const userService = { registerUser, updateUser, getByMySelf };
+const getAllUsersForAdmin = async (
+  queryParams: QueryParams,
+): Promise<IUser[]> => {
+  const users = await userRepository.getAllUsersWithQuery(queryParams);
+  return users;
+};
+
+export const userService = {
+  registerUser,
+  updateUser,
+  getByMySelf,
+  getAllUsersForAdmin,
+};

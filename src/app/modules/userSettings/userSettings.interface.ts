@@ -2,16 +2,13 @@ import { Types } from "mongoose";
 
 export interface IUserSettings {
   _id: Types.ObjectId;
-
   user: Types.ObjectId; // ref User
-
   language: string;
   notifications_enabled: boolean;
   app_notifications: boolean;
   email_notifications: boolean;
   currency: string;
   dark_mode: boolean;
-
   createdAt: Date;
   updatedAt: Date;
 }

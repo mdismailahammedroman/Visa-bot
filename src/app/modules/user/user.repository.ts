@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { hashPassword } from "../../helpers/passwordHelper";
+import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import {
   IUser,
   TCreateUserPayload,
@@ -72,6 +73,21 @@ const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
 const invalidateToken = async (userId: string) => {
   return await User.findByIdAndUpdate(userId, { refreshToken: null });
 };
+
+const getAllUsersWithQuery = (params: QueryParams) => {
+  const query = new QueryBuilder(User.find(), params)
+    .search(["name", "email"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields()
+    .build();
+
+  return query.exec();
+};
+
+// export  userRepository
+
 export const userRepository = {
   findByEmail,
   findByEmailWithPassword,
@@ -82,4 +98,5 @@ export const userRepository = {
   verifyOtpByEmail,
   updateUser,
   invalidateToken,
+  getAllUsersWithQuery,
 };
