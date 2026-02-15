@@ -1,84 +1,93 @@
-import { Schema, model } from "mongoose";
-import { IAuthProvider, IUser, Role, UserStatus } from "./user.interface";
+import { Query, Schema, model } from "mongoose";
+import {
+  GENDER_TYPE,
+  IAuthProvider,
+  IUser,
+  PaymentStatus,
+  Role,
+  UserStatus,
+  VisaStatus,
+} from "./user.interface";
 
+/* ---------------- Auth Provider Sub Schema ---------------- */
 const authProviderSchema = new Schema<IAuthProvider>(
   {
-    provider: { type: String, required: true },
-    providerID: { type: String, required: true },
+    provider: {
+      type: String,
+      required: true,
+      enum: ["google", "credential"],
+    },
+    providerID: {
+      type: String,
+      required: true,
+    },
   },
   {
-    versionKey: false,
     _id: false,
+    versionKey: false,
   },
 );
 
-// User Schema
+/* ---------------- User Schema ---------------- */
 const userSchema = new Schema<IUser>(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
+    name: { type: String, required: true, trim: true, minlength: 2 },
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
+      trim: true,
+      unique: true,
       index: true,
     },
-
-    password: {
-      type: String,
-      required: true,
-      select: false, // password hide by default
-    },
-
+    password: { type: String, required: true, select: false },
     status: {
       type: String,
       enum: Object.values(UserStatus),
       default: UserStatus.PENDING,
     },
-
-    profile_picture: {
-      type: String,
-      default: "",
-    },
-
-    coverPicture: {
-      type: String,
-      default: "",
-    },
-
-    auth_providers: {
-      type: [authProviderSchema],
-      default: [],
-    },
-
-    fcmTokens: {
-      type: [String],
-      default: [],
-    },
-
     role: {
       type: String,
       enum: Object.values(Role),
       default: Role.USER,
     },
-
-    is_verified: {
-      type: Boolean,
-      default: false,
+    gender: { type: String, enum: Object.values(GENDER_TYPE), default: null },
+    profile_picture: { type: String, default: "" },
+    coverPicture: { type: String, default: "" },
+    mobile: { type: String, default: "" },
+    location: { type: String, default: "" },
+    visaStatus: {
+      type: String,
+      enum: Object.values(VisaStatus),
+      default: VisaStatus.PENDING,
     },
-
-    isDeleted: {
-      type: Boolean,
-      default: false,
+    paymentStatus: {
+      type: String,
+      enum: Object.values(PaymentStatus),
+      default: PaymentStatus.UNPAID,
     },
+    coordinate: {
+      type: { type: String, default: "Point" },
+      coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
+      placeName: { type: String },
+    },
+    lastLoginAt: { type: Date, default: null },
+    auth_providers: { type: [authProviderSchema], default: [] },
+    fcmTokens: { type: [String], default: [] },
+    is_verified: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false, index: true },
   },
-  {
-    timestamps: true, // createdAt & updatedAt auto
-  },
+  { timestamps: true },
 );
+
+/* ---------------- Indexes ---------------- */
+userSchema.index({ status: 1 });
+userSchema.index({ role: 1 });
+
+/* ---------------- Soft Delete Middleware ---------------- */
+userSchema.pre(/^find/, function (this: Query<IUser, IUser>) {
+  this.where({ isDeleted: false }); // soft delete
+});
+
+/* ---------------- Export Model ---------------- */
 export const User = model<IUser>("User", userSchema);

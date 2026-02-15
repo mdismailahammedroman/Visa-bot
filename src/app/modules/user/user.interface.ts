@@ -2,6 +2,7 @@ export enum UserStatus {
   PENDING = "PENDING",
   ACTIVE = "ACTIVE",
   BLOCKED = "BLOCKED",
+  SUSPENDED = "SUSPENDED",
 }
 
 export enum AuthProviderType {
@@ -16,9 +17,37 @@ export interface IAuthProvider {
 }
 
 export enum Role {
-  SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
+  MAIN_MANAGER = "MAIN_MANAGER",
+  MANAGER = "MANAGER",
   USER = "USER",
+}
+
+export enum GENDER_TYPE {
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+  OTHER = "OTHER",
+}
+
+// User location coordinates
+export interface ICoord {
+  type: "Point";
+  coordinates: [number, number]; // [longitude, latitude]
+  placeName?: string;
+  lat?: number; // Latitude (for backward compatibility)
+  long?: number; // Longitude (for backward compatibility)
+}
+
+export enum PaymentStatus {
+  PAID = "PAID",
+  UNPAID = "UNPAID",
+  PENDING = "PENDING",
+}
+
+export enum VisaStatus {
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  PENDING = "PENDING",
 }
 
 export interface IUser {
@@ -26,12 +55,26 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
+
   status: UserStatus;
+  role: Role;
+  gender?: GENDER_TYPE;
+
+  mobile?: string;
+  location?: string;
+
   profile_picture?: string;
   coverPicture?: string;
+  coordinate: ICoord;
+
+  visaStatus?: VisaStatus;
+  paymentStatus?: PaymentStatus;
+
+  lastLoginAt?: Date;
+
   auth_providers: IAuthProvider[];
   fcmTokens?: string[];
-  role: Role;
+
   is_verified: boolean;
   isDeleted: boolean;
 
@@ -43,4 +86,18 @@ export type TCreateUserPayload = {
   name: string;
   email: string;
   password: string;
+};
+
+export type TUpdateUserProfile = {
+  name?: string;
+  profile_picture?: string;
+  password: string;
+  coverPicture?: string;
+  gender?: GENDER_TYPE;
+  mobile?: string;
+  isDeleted: boolean;
+  location?: string;
+  lastLoginAt?: Date;
+  status?: UserStatus;
+  role?: Role;
 };

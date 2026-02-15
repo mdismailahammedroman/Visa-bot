@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type QueryParams = {
+export type QueryParams = {
   search?: string;
   page?: string;
   limit?: string;

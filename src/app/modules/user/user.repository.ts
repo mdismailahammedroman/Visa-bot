@@ -1,8 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { hashPassword } from "../../helpers/passwordHelper";
-import { IUser, TCreateUserPayload, UserStatus } from "./user.interface";
+import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
+import {
+  IUser,
+  TCreateUserPayload,
+  TUpdateUserProfile,
+  UserStatus,
+} from "./user.interface";
 import { User } from "./user.model";
 
 const findByEmail = (email: string) => {
+  if (!email) return null as any; // or throw error
   return User.findOne({ email: email.toLowerCase() }).exec();
 };
 
@@ -13,7 +21,7 @@ const findByEmailWithPassword = (email: string) => {
 };
 
 const findById = (id: string) => {
-  return User.findById(id).exec();
+  return User.findById(id);
 };
 
 const register = (payload: TCreateUserPayload) => {
@@ -45,16 +53,41 @@ const updatePasswordByEmail = async (email: string, newPassword: string) => {
 
   return updatedUser;
 };
-
-const updateUserByEmail = (email: string, update: Partial<IUser>) => {
-  return User.findOneAndUpdate({ email: email.toLowerCase() }, update, {
-    new: true,
-  }).exec();
+// otp verify
+const verifyOtpByEmail = (email: string, update: Partial<IUser>) => {
+  return User.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    { $set: update },
+    { new: true, runValidators: true },
+  ).exec();
+};
+// updateUserById
+const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
+  return User.findByIdAndUpdate(
+    userId,
+    { $set: update },
+    { new: true, runValidators: true },
+  ).exec();
 };
 
 const invalidateToken = async (userId: string) => {
   return await User.findByIdAndUpdate(userId, { refreshToken: null });
 };
+
+const getAllUsersWithQuery = (params: QueryParams) => {
+  const query = new QueryBuilder(User.find(), params)
+    .search(["name", "email"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields()
+    .build();
+
+  return query.exec();
+};
+
+// export  userRepository
+
 export const userRepository = {
   findByEmail,
   findByEmailWithPassword,
@@ -62,6 +95,8 @@ export const userRepository = {
   register,
   updatePasswordByEmail,
   updateStatusByEmail,
-  updateUserByEmail,
+  verifyOtpByEmail,
+  updateUser,
   invalidateToken,
+  getAllUsersWithQuery,
 };

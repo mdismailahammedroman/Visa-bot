@@ -10,22 +10,47 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
   const isProduction = envVar.NODE_ENV === "production";
 
   // Access token cookie (1 day)
-  res.cookie("accessToken", tokenInfo.accessToken || "", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
-    path: "/",
-  });
+  //   res.cookie("accessToken", tokenInfo.accessToken || "", {
+  //     httpOnly: true,
+  //     secure: isProduction,
+  //     sameSite: isProduction ? "none" : "lax",
+  //     maxAge: 1000 * 60 * 60 * 24, // 1 day
+  //     path: "/",
+  //   });
+
+  //   // Refresh token cookie (7 days)
+  //   res.cookie("refreshToken", tokenInfo.refreshToken || "", {
+  //     httpOnly: true,
+  //     secure: isProduction,
+  //     sameSite: isProduction ? "none" : "lax",
+  //     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  //     path: "/",
+  //   });
+  // };
+
+  // Access token cookie (1 day)
+
+  // Access token cookie (1 day)
+  if (tokenInfo.accessToken) {
+    res.cookie("accessToken", tokenInfo.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      path: "/",
+    });
+  }
 
   // Refresh token cookie (7 days)
-  res.cookie("refreshToken", tokenInfo.refreshToken || "", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: "/",
-  });
+  if (tokenInfo.refreshToken) {
+    res.cookie("refreshToken", tokenInfo.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
+    });
+  }
 };
 
 export const clearAuthCookies = (res: Response) => {

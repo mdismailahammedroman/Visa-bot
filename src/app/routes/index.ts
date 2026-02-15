@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { socketRouter } from "../modules/socket/socket.routes";
 import { countryRouter } from "../modules/country/countries.routes";
-import { userRouter } from "../modules/user/user.route";
 import { authRouter } from "../modules/auth/auth.route";
 import { otpRouter } from "../modules/Otp/otp.route";
+import { userRouter } from "../modules/user/user.route";
 
 export const router = Router();
 
