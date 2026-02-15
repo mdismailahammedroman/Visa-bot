@@ -8,7 +8,6 @@ import { StatusCodes } from "http-status-codes";
 
 import { Role, TUpdateUserProfile, UserStatus } from "./user.interface";
 import AppError from "../../ErrorHelpers/AppError";
-import { User } from "./user.model";
 
 const registerUser = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
