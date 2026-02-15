@@ -1,8 +1,10 @@
+import { User } from "./user.model";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
 import {
   IUser,
+  Role,
   TCreateUserPayload,
   TUpdateUserProfile,
   UserStatus,
@@ -114,10 +116,67 @@ const getUserProfileForAdmin = async (userId: string) => {
   };
 };
 
+const changeUserStatus = async (
+  adminUser: IUser,
+  userId: string,
+  status: UserStatus,
+) => {
+  // Only admins can change status
+  if (![Role.MAIN_MANAGER, Role.ADMIN].includes(adminUser.role)) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Only admins can change user status",
+    );
+  }
+
+  const user = await userRepository.findById(userId);
+  if (!user || user.isDeleted) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  const updatedUser = await userRepository.updateUser(userId, { status });
+  return updatedUser;
+};
+
+const changeUserRole = async (adminUser: IUser, userId: string, role: Role) => {
+  // Only admins can change role
+  if (![Role.ADMIN].includes(adminUser.role)) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Only admins can change user role",
+    );
+  }
+
+  const user = await userRepository.findById(userId);
+  if (!user || user.isDeleted) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  const updatedUser = await userRepository.updateUser(userId, { role });
+  return updatedUser;
+};
+
+const deleteMyAccount = async (userId: string) => {
+  const user = await userRepository.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  // Hard delete the user from the database
+  await User.findByIdAndDelete(userId);
+
+  return null;
+};
+
+// export user services
 export const userService = {
   registerUser,
   updateUser,
   getByMySelf,
   getAllUsersForAdmin,
   getUserProfileForAdmin,
+  changeUserStatus,
+  changeUserRole,
+  deleteMyAccount,
 };

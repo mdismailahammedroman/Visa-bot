@@ -25,42 +25,32 @@ router.get(
 );
 router.get(
   "/all-users",
-  checkAuth(...Object.values(Role)),
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER),
   userController.getAllUsers,
 );
 
-router.get("/:userId", checkAuth(), userController.getUserProfileByIdForAdmin);
+router.get(
+  "/profile/:userId",
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
+  userController.getUserProfileByIdForAdmin,
+);
+
+router.patch(
+  "/status/:userId",
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
+  userController.setUserStatus,
+);
+
+router.patch(
+  "/role/:userId",
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
+  userController.setUserRole,
+);
+
+router.delete(
+  "/delete-account",
+  checkAuth(...Object.values(Role)),
+  userController.deleteMyAccount,
+);
 
 export const userRouter = router;
-
-// | # | Method | Endpoint                      | Auth Required | Description                |
-// | - | ------ | ----------------------------- | ------------- | -------------------------- |
-// | 1 | POST   | /api/v1/users/register        | No            | Register new user          |
-// | 2 | POST   | /api/v1/users/login           | No            | Login user                 |
-// | 3 | GET    | /api/v1/users/me              | Yes           | Get logged-in user profile |
-// | 4 | PUT    | /api/v1/users/me              | Yes           | Update profile             |
-// | 5 | POST   | /api/v1/users/change-password | Yes           | Change password            |
-// | 6 | GET    | /api/v1/users                 | Yes (Admin)   | List all users             |
-// | 7 | POST   | /api/v1/users/logout          | Yes           | Logout user                |
-// router.get(
-//   "/profile/:userId",
-//   checkAuth(Role.ADMIN),
-//   userController.getProfile,
-// );
-// router.get("/", checkAuth(Role.ADMIN), userController.getAllUser);
-// router.patch(
-//   "/update-user",
-//   // multerUpload.single("coverPicture"),
-//   // multerUpload.single("profile_picture"),
-//   multerUpload.fields([
-//     { name: "coverPicture", maxCount: 1 },
-//     { name: "profile_picture", maxCount: 1 },
-//   ]),
-//   checkAuth(Role.USER, Role.ADMIN),
-//   userController.userUpdate,
-// );
-// router.delete(
-//   "/:userId",
-//   checkAuth(...Object.keys(Role)),
-//   userController.userDelete,
-// );

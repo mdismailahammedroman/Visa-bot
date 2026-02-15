@@ -11,6 +11,8 @@ import { authService } from "./auth.service";
 import { clearAuthCookies, setAuthCookie } from "../../utils/setAuthCookies";
 import { createUserTokens } from "../../utils/authToken";
 import { JwtPayload } from "../../types/auth.types";
+import { redisClient } from "../../config/redis.config";
+import { envVar } from "../../config/EnvVar";
 
 // ========================================================================================================================================
 //                     use passport to user credentialLogin
@@ -54,63 +56,99 @@ const credentialLogin = CatchAsync(
 //                     use passport to user apple login
 // ========================================================================================================================================
 
-// ========================================================================================================================================
-//                     forgot password controller
-// ========================================================================================================================================
-const forgotPassword = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
-    const result = await authService.forgotPassword(email);
-    sendResponse(res, {
-      statusCode: StatusCodes.OK,
-      success: true,
-      message: "Forgot password endpoint working",
-      data: result,
-    });
-  },
-);
+// Forgot password
+const forgotPassword = CatchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await authService.forgotPassword(email);
 
-const resetPassword = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email, newPassword } = req.body;
-    await authService.resetPassword(email, newPassword);
-    sendResponse(res, {
-      statusCode: StatusCodes.OK,
-      success: true,
-      message: "Password reset successful",
-      data: null,
-    });
-  },
-);
-const logout = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    // check user
-    if (!req.user) {
-      return res.status(401).json({ message: "User not logged in" });
-    }
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "OTP sent successfully",
+    data: result,
+  });
+});
 
-    // get userId from JwtPayload
-    const userId = req.user as JwtPayload;
+// Verify OTP
+const verifyOTP = CatchAsync(async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  const result = await authService.verifyOTPForPassword(email, otp);
 
-    // invalidate tokens in DB
-    const result = await authService.logout(userId.userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "OTP verified successfully",
+    data: result,
+  });
+});
 
-    // clear cookies
-    clearAuthCookies(res);
+// Reset password
+const resetPassword = CatchAsync(async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  const result = await authService.resetPassword(email, newPassword);
 
-    // send response
-    sendResponse(res, {
-      statusCode: StatusCodes.OK,
-      message: "Logout successful",
-      success: true,
-      data: result,
-    });
-  },
-);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Password reset successfully",
+    data: result,
+  });
+});
+
+// Change password
+const changePassword = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as any;
+
+  const { oldPassword, newPassword } = req.body;
+  const result = await authService.changePassword(
+    userId,
+    oldPassword,
+    newPassword,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Password changed successfully",
+    data: result,
+  });
+});
+
+// Logout
+const logout = CatchAsync(async (req: Request, res: Response) => {
+  const payload = req.user as any;
+
+  await redisClient.del(`refresh:${payload.userId}`);
+
+  const isProduction = envVar.NODE_ENV === "production";
+
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Logout successful",
+    data: null,
+  });
+});
 
 export const authController = {
   credentialLogin,
   forgotPassword,
+  verifyOTP,
   resetPassword,
+  changePassword,
   logout,
 };

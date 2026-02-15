@@ -6,7 +6,7 @@ import { sendResponse } from "../../utils/sendResponse";
 import { userService } from "./user.service";
 import { StatusCodes } from "http-status-codes";
 
-import { TUpdateUserProfile } from "./user.interface";
+import { Role, TUpdateUserProfile, UserStatus } from "./user.interface";
 import AppError from "../../ErrorHelpers/AppError";
 import { User } from "./user.model";
 
@@ -93,12 +93,75 @@ const getUserProfileByIdForAdmin = CatchAsync(
   },
 );
 
+// Change user status (BLOCK, ACTIVE, SUSPEND)
+const setUserStatus = CatchAsync(async (req: Request, res: Response) => {
+  const adminUser = req.user as any;
+  const { userId } = req.params;
+  const { status } = req.body; // should be one of UserStatus
+
+  if (!Object.values(UserStatus).includes(status)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status");
+  }
+
+  const updatedUser = await userService.changeUserStatus(
+    adminUser,
+    userId as string,
+    status,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: `User status updated to ${status}`,
+    data: updatedUser,
+  });
+});
+
+// Change user role (ADMIN,  etc.)
+const setUserRole = CatchAsync(async (req: Request, res: Response) => {
+  const adminUser = req.user as any;
+  const { userId } = req.params;
+  const { role } = req.body; // should be one of Role
+
+  if (!Object.values(Role).includes(role)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid role");
+  }
+
+  const updatedUser = await userService.changeUserRole(
+    adminUser,
+    userId as string,
+    role,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: `User role updated to ${role}`,
+    data: updatedUser,
+  });
+});
+
+const deleteMyAccount = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+
+  await userService.deleteMyAccount(user.userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Account deleted",
+    data: null,
+  });
+});
 // userController/
 
 export const userController = {
   registerUser,
+  setUserStatus,
+  setUserRole,
   updateUser,
   getByMySelf,
   getAllUsers,
   getUserProfileByIdForAdmin,
+  deleteMyAccount,
 };

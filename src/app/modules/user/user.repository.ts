@@ -21,7 +21,7 @@ const findByEmailWithPassword = (email: string) => {
 };
 
 const findById = (id: string) => {
-  return User.findById(id).exec();
+  return User.findById(id);
 };
 
 const register = (payload: TCreateUserPayload) => {

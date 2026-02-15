@@ -21,6 +21,9 @@ passport.use(
           return done(null, false, { message: "Password is missing" });
         }
 
+        user.lastLoginAt = new Date();
+        await user.save();
+
         return done(null, user);
       } catch (error) {
         return done(error);
