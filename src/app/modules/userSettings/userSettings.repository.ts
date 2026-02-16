@@ -43,7 +43,7 @@ const toObjectId = (input: UserIdInput): Types.ObjectId => {
 
 const findByUserId = (userId: UserIdInput) => {
   const id = toObjectId(userId);
-  return UserSettings.findOne({ user: id }).exec();
+  return UserSettings.findOne({ user: id }).lean().exec();
 };
 
 const createDefaultByUserId = (userId: UserIdInput) => {
