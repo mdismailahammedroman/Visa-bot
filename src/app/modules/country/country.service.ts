@@ -4,42 +4,44 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
 import { ICountry } from "./country.interface";
 import { CountryRepository } from "./country.repository";
+import { getCurrencyRate } from "../../utils/fixer";
 
 const createCountry = async (payload: ICountry) => {
-  payload.isoCode = payload.isoCode.toUpperCase().trim();
+  let currencyRate: number | null = null;
+  if (payload.currency) {
+    const rate = await getCurrencyRate(payload.currency);
+    if (rate) currencyRate = rate;
+  }
 
-  const existingName = await CountryRepository.findByName(payload.name);
-  if (existingName)
-    throw new AppError(StatusCodes.CONFLICT, "Country name already exists");
-
-  const existingCode = await CountryRepository.findByIsoCode(payload.isoCode);
-  if (existingCode)
-    throw new AppError(StatusCodes.CONFLICT, "Country ISO code already exists");
-
-  return CountryRepository.create(payload);
+  return await CountryRepository.create({
+    ...payload,
+    currencyRate,
+    notes: `Current EUR → ${payload.currency} rate: ${currencyRate ?? "N/A"}`,
+  });
 };
 
 const getAllCountries = async (query: any) => {
-  // simple search support
   const q: any = {};
   if (query.search) q.$text = { $search: query.search };
   if (query.continent) q.continent = query.continent;
-
   return CountryRepository.findAll(q);
 };
 
 const updateCountry = async (id: string, payload: Partial<ICountry>) => {
   if (payload.isoCode) payload.isoCode = payload.isoCode.toUpperCase().trim();
-
   const updated = await CountryRepository.updateById(id, payload);
   if (!updated) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
-
   return updated;
 };
 
 const getCountryById = async (id: string) => {
   const c = await CountryRepository.findById(id);
   if (!c) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
+
+  if (c.currency) {
+    const rate = await getCurrencyRate(c.currency);
+    return { ...c.toObject(), currencyRate: rate };
+  }
   return c;
 };
 

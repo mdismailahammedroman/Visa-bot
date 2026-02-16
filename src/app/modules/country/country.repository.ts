@@ -5,7 +5,9 @@ import { ICountry } from "./country.interface";
 
 const create = (payload: ICountry) => CountryModel.create(payload);
 
-const findByName = (name: string) => CountryModel.findOne({ name });
+const findByName = (countryName: string) =>
+  CountryModel.findOne({ countryName });
+
 const findByIsoCode = (isoCode: string) =>
   CountryModel.findOne({ isoCode: isoCode.toUpperCase() });
 
