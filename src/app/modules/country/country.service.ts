@@ -1,22 +1,23 @@
 // src/modules/country/country.service.ts
-
-import { StatusCodes } from "http-status-codes";
-import AppError from "../../ErrorHelpers/AppError";
 import { ICountry } from "./country.interface";
 import { CountryRepository } from "./country.repository";
+import AppError from "../../ErrorHelpers/AppError";
+import { StatusCodes } from "http-status-codes";
 
 const createCountry = async (payload: ICountry) => {
-  const exists = await CountryRepository.findByName(payload.name);
-
-  if (exists) {
+  // Check if country already exists
+  const existing = await CountryRepository.findByName(payload.name);
+  if (existing) {
     throw new AppError(StatusCodes.CONFLICT, "Country already exists");
   }
 
-  return CountryRepository.create(payload);
+  const country = await CountryRepository.create(payload);
+  return country;
 };
 
 const getAllCountries = async () => {
-  return CountryRepository.findAll();
+  const countries = await CountryRepository.findAll();
+  return countries;
 };
 
 export const CountryService = {

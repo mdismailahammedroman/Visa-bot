@@ -55,18 +55,15 @@ const changePassword = async (
   oldPassword: string,
   newPassword: string,
 ) => {
-  const user = await userRepository.findById(userId).select("+password");
+  const user = await userRepository.findByIdWithPassword(userId); // now returns a doc
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
   const isMatch = await bcrypt.compare(oldPassword, user.password || "");
-  console.log("Comparing:", oldPassword, user.password);
-
   if (!isMatch)
     throw new AppError(StatusCodes.BAD_REQUEST, "Old password is incorrect");
 
   user.password = await bcrypt.hash(newPassword, 10);
   await user.save();
-
   return { message: "Password changed successfully" };
 };
 
