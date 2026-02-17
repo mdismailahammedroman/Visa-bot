@@ -31,7 +31,7 @@ const getByCountry = CatchAsync(async (req: Request, res: Response) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
 
   const result =
-    await VisaServiceService.getVisaServicesByCountry(countryIdRaw);
+    await VisaServiceService.getVisaServicesByCountry(countryIdRa w);
 
   return sendResponse(res, {
     success: true,
