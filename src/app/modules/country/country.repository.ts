@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// src/modules/country/country.repository.ts
 import { CountryModel } from "./country.model";
 import { ICountry } from "./country.interface";
 
@@ -11,13 +9,15 @@ const findByName = (countryName: string) =>
 const findByIsoCode = (isoCode: string) =>
   CountryModel.findOne({ isoCode: isoCode.toUpperCase() });
 
-const findAll = (query: any = {}) =>
-  CountryModel.find(query).sort({ createdAt: -1 });
+const findAll = () => CountryModel.find();
 
 const findById = (id: string) => CountryModel.findById(id);
 
 const updateById = (id: string, payload: Partial<ICountry>) =>
-  CountryModel.findByIdAndUpdate(id, payload, { new: true });
+  CountryModel.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  });
 
 export const CountryRepository = {
   create,

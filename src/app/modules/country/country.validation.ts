@@ -1,23 +1,21 @@
-// src/modules/country/country.validation.ts
 import { z } from "zod";
 import { validContinents, validCurrencies } from "./country.interface";
 
 export const createCountryZodSchema = z.object({
   body: z.object({
     countryName: z.string().min(2),
+
     isoCode: z
       .string()
       .min(2)
       .max(3)
-      .regex(/^[A-Z]+$/, "ISO code must be uppercase letters"),
-    continent: z
-      .string()
-      .transform((val) =>
-        val.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()),
-      )
-      .refine((val) => (validContinents as readonly string[]).includes(val), {
-        message: "Invalid continent",
+      .transform((val) => val.toUpperCase())
+      .refine((val) => /^[A-Z]+$/.test(val), {
+        message: "ISO code must contain only letters",
       }),
+
+    continent: z.enum(validContinents),
+
     capital: z.string().optional(),
     flagUrl: z.string().url().optional(),
     currency: z.enum(validCurrencies).optional(),
@@ -37,8 +35,11 @@ export const updateCountryZodSchema = z.object({
       .string()
       .min(2)
       .max(3)
-      .regex(/^[A-Z]+$/, "ISO code must be uppercase letters")
-      .optional(),
+      .transform((val) => val.toUpperCase())
+      .refine((val) => /^[A-Z]+$/.test(val), {
+        message: "ISO code must contain only letters",
+      }),
+
     continent: z.enum(validContinents).optional(),
     capital: z.string().optional(),
     flagUrl: z.string().url().optional(),

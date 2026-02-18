@@ -1,4 +1,3 @@
-// src/modules/country/country.interface.ts
 export const validContinents = [
   "Asia",
   "Africa",
@@ -17,15 +16,27 @@ export const validCurrencies = [
   "EUR",
   "BDT",
   "GBP",
+  "AUD",
+  "CHF",
+  "NZD",
   "JPY",
   "CNY",
+  "SAR",
+  "AED",
+  "TRY",
+  "MYR",
+  "IRR",
+  "KWD",
+  "BHD",
+  "OMR",
+  "QAR",
 ] as const;
 
 export type Currency = (typeof validCurrencies)[number];
 
 export interface ICountry {
-  countryName: string; // name of the country
-  isoCode: string; // 2-3 uppercase letters
+  countryName: string;
+  isoCode: string;
   continent: Continent;
 
   capital?: string;

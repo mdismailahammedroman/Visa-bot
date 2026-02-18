@@ -1,10 +1,14 @@
-// src/modules/country/country.model.ts
 import { Schema, model } from "mongoose";
-import { ICountry } from "./country.interface";
+import { ICountry, validContinents, validCurrencies } from "./country.interface";
 
 const countrySchema = new Schema<ICountry>(
   {
-    countryName: { type: String, required: true, unique: true, trim: true },
+    countryName: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
     isoCode: {
       type: String,
       required: true,
@@ -12,11 +16,21 @@ const countrySchema = new Schema<ICountry>(
       uppercase: true,
       trim: true,
     },
-    continent: { type: String, required: true, trim: true },
-    currencyRate: { type: Number, default: null },
+    continent: {
+      type: String,
+      required: true,
+      enum: validContinents,
+    },
+    currencyRate: {
+      type: Number,
+      default: null,
+    },
     capital: { type: String, trim: true },
     flagUrl: { type: String, trim: true },
-    currency: { type: String, trim: true },
+    currency: {
+      type: String,
+      enum: validCurrencies,
+    },
     timeZones: { type: [String], default: [] },
     population: { type: Number },
     popularCities: { type: [String], default: [] },
@@ -27,11 +41,19 @@ const countrySchema = new Schema<ICountry>(
   { timestamps: true },
 );
 
-// TEXT INDEX FOR SEARCH
-countrySchema.index({
-  countryName: "text",
-  isoCode: "text",
-  continent: "text",
-});
+countrySchema.index(
+  {
+    countryName: "text",
+    isoCode: "text",
+    continent: "text",
+  },
+  {
+    weights: {
+      countryName: 5,
+      isoCode: 4,
+      continent: 2,
+    },
+  },
+);
 
 export const CountryModel = model<ICountry>("Country", countrySchema);
