@@ -84,16 +84,15 @@ const invalidateToken = async (userId: string) => {
 };
 
 const getAllUsersWithQuery = (params: QueryParams) => {
-  const query = new QueryBuilder(User.find(), params)
+  return new QueryBuilder(User.find(), params)
     .search(["name", "email"])
     .filter()
     .sort()
     .paginate()
     .fields()
     .build();
-
-  return query.lean().exec();
 };
+
 const deleteUserById = (userId: string) => {
   return User.findByIdAndDelete(userId).lean().exec(); // lean + fast
 };

@@ -75,9 +75,12 @@ const getByMySelf = async (userId: string) => {
 
 const getAllUsersForAdmin = async (
   queryParams: QueryParams,
-): Promise<IUser[]> => {
-  const users = await userRepository.getAllUsersWithQuery(queryParams);
-  return users;
+): Promise<{ data: IUser[]; meta: any }> => {
+  const usersWithMeta = await userRepository.getAllUsersWithQuery(queryParams);
+  return {
+    data: usersWithMeta.data,
+    meta: usersWithMeta.meta,
+  };
 };
 
 const getUserProfileForAdmin = async (userId: string) => {

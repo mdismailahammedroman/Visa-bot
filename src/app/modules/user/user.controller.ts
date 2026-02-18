@@ -65,15 +65,15 @@ const getByMySelf = CatchAsync(async (req: Request, res: Response) => {
 });
 
 // getAllUsers
-
 const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
-  const users = await userService.getAllUsersForAdmin(req.query);
+  const usersWithMeta = await userService.getAllUsersForAdmin(req.query);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "All users fetched successfully",
-    data: users,
+    meta: usersWithMeta.meta,
+    data: usersWithMeta.data,
   });
 });
 
