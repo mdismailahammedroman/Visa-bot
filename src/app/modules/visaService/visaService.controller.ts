@@ -4,16 +4,15 @@ import { CatchAsync } from "../../utils/CatchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import { VisaServiceService } from "./visaService.service";
 import AppError from "../../ErrorHelpers/AppError";
+import { QueryParams } from "../../utils/queryBuilder";
 
 const createForCountry = CatchAsync(async (req: Request, res: Response) => {
-  const countryIdRaw = req.params.countryId;
-
-  // ✅ TS safe guard (avoid string | undefined issue)
-  if (!countryIdRaw)
+  const countryId = req.params.countryId;
+  if (!countryId)
     throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
 
   const result = await VisaServiceService.createVisaServiceForCountry(
-    countryIdRaw,
+    countryId as string,
     req.body,
   );
 
@@ -25,19 +24,23 @@ const createForCountry = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// ✅ Pagination: ?page=1&limit=10
 const getByCountry = CatchAsync(async (req: Request, res: Response) => {
-  const countryIdRaw = req.params.countryId;
-  if (!countryIdRaw)
+  const countryId = req.params.countryId;
+  if (!countryId)
     throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
 
-  const result =
-    await VisaServiceService.getVisaServicesByCountry(countryIdRaw);
+  const result = await VisaServiceService.getVisaServicesByCountry(
+    countryId as string,
+    req.query as QueryParams,
+  );
 
   return sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "VisaServices fetched successfully",
-    data: result,
+    data: result.data,
+    meta: result.meta,
   });
 });
 
@@ -68,9 +71,23 @@ const update = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteService = CatchAsync(async (req: Request, res: Response) => {
+  const result = await VisaServiceService.deleteVisaService(
+    req.params.id as string,
+  );
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "VisaService deleted successfully",
+    data: result,
+  });
+});
+
 export const VisaServiceController = {
   createForCountry,
   getByCountry,
   getOne,
   update,
+  delete: deleteService,
 };

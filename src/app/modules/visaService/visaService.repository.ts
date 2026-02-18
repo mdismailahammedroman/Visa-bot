@@ -15,10 +15,13 @@ const findByCountry = (countryId: string) =>
 const updateById = (id: string, payload: Partial<IVisaService>) =>
   VisaServiceModel.findByIdAndUpdate(id, payload, { new: true });
 
+const deleteById = (id: string) => VisaServiceModel.findByIdAndDelete(id);
+
 export const VisaServiceRepository = {
   create,
   findBySlug,
   findById,
   findByCountry,
   updateById,
+  deleteById, // export it
 };
