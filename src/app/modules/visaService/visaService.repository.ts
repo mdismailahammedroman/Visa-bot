@@ -22,6 +22,20 @@ const updateById = (id: string, payload: Partial<IVisaService>) =>
 const deleteById = (id: string) =>
   VisaServiceModel.findByIdAndDelete(id);
 
+
+// findByCountryAndCategory wise visa services
+const findByCountryAndCategory = (countryId: string, category: string) =>
+  VisaServiceModel.find({
+    countryId,
+    visaCategories: category,
+    isActive: true,
+  }).lean();
+
+  // /findAllVisaServices
+  const findAllVisaServices = async () => {
+  return await VisaServiceModel.find({}).sort({ createdAt: -1 }).lean();
+};
+
 export const VisaServiceRepository = {
   create,
   findById,
@@ -29,4 +43,6 @@ export const VisaServiceRepository = {
   findBySlugAndCountry,
   updateById,
   deleteById,
+  findByCountryAndCategory,
+  findAllVisaServices,
 };

@@ -122,10 +122,19 @@ const deleteVisaService = async (id: string) => {
   return deleted;
 };
 
+
+const getByCategory = async (countryId: string, category: string) => {
+  return await VisaServiceRepository.findByCountryAndCategory(
+    countryId,
+    category,
+  );
+};
+
 export const VisaServiceService = {
   createVisaServiceForCountry,
   getVisaServicesByCountry,
   getVisaServiceById,
   updateVisaService,
   deleteVisaService,
+  getByCategory,
 };

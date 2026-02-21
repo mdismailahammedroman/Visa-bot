@@ -71,6 +71,11 @@ const update = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+/**
+ * delete service
+ */
+
 const deleteService = CatchAsync(async (req: Request, res: Response) => {
   const result = await VisaServiceService.deleteVisaService(
     req.params.id as string,
@@ -84,10 +89,31 @@ const deleteService = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * getByCategory
+ */
+
+const getByCategory = CatchAsync(async (req: Request, res: Response) => {
+  const { countryId, category } = req.params;
+
+  const result = await VisaServiceService.getByCategory(
+    countryId as string,
+    category as string,
+  );
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "VisaServices fetched successfully",
+    data: result,
+  });
+});
+
 export const VisaServiceController = {
   createForCountry,
   getByCountry,
   getOne,
   update,
   delete: deleteService,
+  getByCategory
 };

@@ -39,7 +39,6 @@ const visaServiceSchema = new Schema<IVisaService>(
     },
 
     maxStayDays: { type: Number },
-    applicationLink: { type: String },
     eligibleFor: { type: [String], default: [] },
     requirements: { type: [String], default: [] },
     processingTimeDays: { type: Number },
@@ -49,7 +48,7 @@ const visaServiceSchema = new Schema<IVisaService>(
 
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true },
+  { timestamps: true, versionKey: false },
 );
 
 /**
@@ -57,10 +56,18 @@ const visaServiceSchema = new Schema<IVisaService>(
  * Same slug allowed in different countries
  * But NOT allowed inside same country
  */
-visaServiceSchema.index(
-  { countryId: 1, slug: 1 },
-  { unique: true }
-);
+visaServiceSchema.index({ countryId: 1, slug: 1 }, { unique: true });
+
+visaServiceSchema.set("toJSON", {
+  transform: function (_doc, ret) {
+    const { _id, ...rest } = ret;
+
+    return {
+      id: _id,
+      ...rest,
+    };
+  },
+});
 
 /**
  *  Text search index

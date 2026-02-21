@@ -49,6 +49,17 @@ router.patch(
 );
 
 /**
+ * getByCategory
+ */
+router.get(
+  "/countries/:countryId/visa-services/category/:category",
+  checkAuth(...Object.values(Role)),
+  VisaServiceController.getByCategory,
+);
+
+
+
+/**
  * Delete service
  */
 router.delete(

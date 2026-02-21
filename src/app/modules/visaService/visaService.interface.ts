@@ -22,17 +22,17 @@ export enum VisaTypeEnum {
 
 // ✅ Visa Service Interface (plain structure)
 export interface IVisaService {
-  countryId: Types.ObjectId; // which country these rules apply to
+  countryId: Types.ObjectId;
   serviceName: string;
-  slug?: string;
+  slug: string;
+
   description?: string;
   currency?: string;
 
-  // ✅ Plain category fields (no array)
   visaCategories: VisaCategoryEnum;
   visaType: VisaTypeEnum;
+
   maxStayDays?: number;
-  applicationLink?: string;
   eligibleFor?: string[];
   requirements?: string[];
   processingTimeDays?: number;
@@ -40,7 +40,8 @@ export interface IVisaService {
   multipleEntries?: boolean;
   notes?: string;
 
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  isActive: boolean;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
