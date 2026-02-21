@@ -58,6 +58,10 @@ router.get(
 );
 
 
+/**+
+ * getAll
+ */
+router.get("/visa-services", checkAuth(...Object.values(Role)), VisaServiceController.getAllVisaServicesController);
 
 /**
  * Delete service

@@ -130,6 +130,13 @@ const getByCategory = async (countryId: string, category: string) => {
   );
 };
 
+
+const getAllVisaServices = async (queryParams: QueryParams = {}) => {
+  return await VisaServiceRepository.findAllVisaServices(queryParams);
+};
+
+
+
 export const VisaServiceService = {
   createVisaServiceForCountry,
   getVisaServicesByCountry,
@@ -137,4 +144,5 @@ export const VisaServiceService = {
   updateVisaService,
   deleteVisaService,
   getByCategory,
+  getAllVisaServices,
 };

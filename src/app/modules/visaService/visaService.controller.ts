@@ -109,11 +109,27 @@ const getByCategory = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * get all visa services
+ */
+const getAllVisaServicesController = CatchAsync(async (req: Request, res: Response) => {
+  const result = await VisaServiceService.getAllVisaServices(req.query as QueryParams);
+
+  return sendResponse(res, {
+    success: true,
+    message: "Retrieve all visa services",
+    statusCode: StatusCodes.OK,
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
 export const VisaServiceController = {
   createForCountry,
   getByCountry,
   getOne,
   update,
   delete: deleteService,
-  getByCategory
+  getByCategory,
+  getAllVisaServicesController,
 };
