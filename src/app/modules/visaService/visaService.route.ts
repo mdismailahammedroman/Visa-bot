@@ -10,29 +10,37 @@ import { Role } from "../user/user.interface";
 
 const router = Router();
 
-// ✅ Country-wise - Admin / Main Manager only
+/**
+ * Create service for specific country
+ */
 router.post(
-  "/visa-services/countries/:countryId",
+  "/countries/:countryId/visa-services",
   checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
   validateRequest(createVisaServiceZodSchema),
   VisaServiceController.createForCountry,
 );
 
-// ✅ Country-wise GET - any authenticated user
+/**
+ * Get services by country (pagination supported)
+ */
 router.get(
-  "/visa-services/countries/:countryId",
-  checkAuth(...Object.values(Role)), // user, admin, manager can read
+  "/countries/:countryId/visa-services",
+  checkAuth(...Object.values(Role)),
   VisaServiceController.getByCountry,
 );
 
-// ✅ Single service GET - any authenticated user
+/**
+ * Get single service by ID
+ */
 router.get(
   "/visa-services/:id",
   checkAuth(...Object.values(Role)),
   VisaServiceController.getOne,
 );
 
-// ✅ Update service - Admin / Main Manager only
+/**
+ * Update service
+ */
 router.patch(
   "/visa-services/:id",
   checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
@@ -40,7 +48,9 @@ router.patch(
   VisaServiceController.update,
 );
 
-// ✅ Optional delete - Admin only
+/**
+ * Delete service
+ */
 router.delete(
   "/visa-services/:id",
   checkAuth(Role.ADMIN),
@@ -48,4 +58,3 @@ router.delete(
 );
 
 export const visaServiceRouter = router;
-      

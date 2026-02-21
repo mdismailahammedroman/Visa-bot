@@ -30,7 +30,7 @@ const routes = [
     route: countryRouter,
   },
   {
-    path: "/visa-service",
+    path: "/visa",
     route: visaServiceRouter,
   },
 ];

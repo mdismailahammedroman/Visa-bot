@@ -4,24 +4,29 @@ import { IVisaService } from "./visaService.interface";
 const create = (payload: Partial<IVisaService>) =>
   VisaServiceModel.create(payload);
 
-const findBySlug = (slug: string) =>
-  VisaServiceModel.findOne({ slug: slug.toLowerCase().trim() });
-
-const findById = (id: string) => VisaServiceModel.findById(id);
+const findById = (id: string) =>
+  VisaServiceModel.findById(id);
 
 const findByCountry = (countryId: string) =>
   VisaServiceModel.find({ countryId }).sort({ createdAt: -1 });
 
+const findBySlugAndCountry = (slug: string, countryId: string) =>
+  VisaServiceModel.findOne({
+    slug: slug.toLowerCase().trim(),
+    countryId,
+  });
+
 const updateById = (id: string, payload: Partial<IVisaService>) =>
   VisaServiceModel.findByIdAndUpdate(id, payload, { new: true });
 
-const deleteById = (id: string) => VisaServiceModel.findByIdAndDelete(id);
+const deleteById = (id: string) =>
+  VisaServiceModel.findByIdAndDelete(id);
 
 export const VisaServiceRepository = {
   create,
-  findBySlug,
   findById,
   findByCountry,
+  findBySlugAndCountry,
   updateById,
-  deleteById, // export it
+  deleteById,
 };

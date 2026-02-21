@@ -24,7 +24,7 @@ const createForCountry = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ✅ Pagination: ?page=1&limit=10
+//  Pagination: ?page=1&limit=10
 const getByCountry = CatchAsync(async (req: Request, res: Response) => {
   const countryId = req.params.countryId;
   if (!countryId)

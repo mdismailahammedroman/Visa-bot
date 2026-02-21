@@ -5,31 +5,90 @@ import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 
-// helper
-const normalizeSlug = (slug: string) => slug.toLowerCase().trim();
+/// Helper function to normalize and validate slugs
+const normalizeSlug = (value: string): string => {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+};
 
-const createVisaServiceForCountry = async (countryId: string, payload: any) => {
+const createVisaServiceForCountry = async (
+  countryId: string,
+  payload: any,
+) => {
   const country = await CountryRepository.findById(countryId);
-  if (!country) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
+  if (!country) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
+  }
 
-  payload.slug = normalizeSlug(payload.slug);
+  // Auto generate slug
+  if (!payload.slug) {
+    if (!payload.serviceName) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "serviceName is required to generate slug",
+      );
+    }
 
-  const existing = await VisaServiceRepository.findBySlug(payload.slug);
-  if (existing)
-    throw new AppError(StatusCodes.CONFLICT, "VisaService slug already exists");
+    payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
+  payload.serviceName
+)}`
+  } else {
+    payload.slug = normalizeSlug(payload.slug);
+  }
 
-  if (!payload.visaCategories || payload.visaCategories.length < 1)
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "At least 1 visa category is required",
+  // ✅ Check duplicate inside SAME country
+  const existing =
+    await VisaServiceRepository.findBySlugAndCountry(
+      payload.slug,
+      countryId,
     );
 
-  return VisaServiceRepository.create({ ...payload, countryId });
+  if (existing) {
+    throw new AppError(
+      StatusCodes.CONFLICT,
+      "This slug already exists in this country",
+    );
+  }
+
+  return await VisaServiceRepository.create({
+    ...payload,
+    countryId,
+  });
 };
+
+const updateVisaService = async (id: string, payload: any) => {
+  const existing = await VisaServiceRepository.findById(id);
+  if (!existing) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Visa Service not found");
+  }
+
+  if (payload.slug) {
+    payload.slug = normalizeSlug(payload.slug);
+
+    const duplicate =
+      await VisaServiceRepository.findBySlugAndCountry(
+        payload.slug,
+        existing.countryId.toString(),
+      );
+
+    if (duplicate && duplicate.id !== id) {
+      throw new AppError(
+        StatusCodes.CONFLICT,
+        "Slug already exists in this country",
+      );
+    }
+  }
+
+  return await VisaServiceRepository.updateById(id, payload);
+}
 
 const getVisaServicesByCountry = async (
   countryId: string,
-  queryParams: QueryParams = {}
+  queryParams: QueryParams = {},
 ) => {
   const country = await CountryRepository.findById(countryId);
   if (!country) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
@@ -49,30 +108,11 @@ const getVisaServicesByCountry = async (
   return result;
 };
 
-
 const getVisaServiceById = async (id: string) => {
   const service = await VisaServiceRepository.findById(id).lean();
   if (!service)
     throw new AppError(StatusCodes.NOT_FOUND, "VisaService not found");
   return service;
-};
-
-const updateVisaService = async (id: string, payload: any) => {
-  if (payload.slug) payload.slug = normalizeSlug(payload.slug);
-
-  if (payload.slug) {
-    const existing = await VisaServiceRepository.findBySlug(payload.slug);
-    if (existing && String(existing._id) !== String(id))
-      throw new AppError(
-        StatusCodes.CONFLICT,
-        "VisaService slug already exists",
-      );
-  }
-
-  const updated = await VisaServiceRepository.updateById(id, payload);
-  if (!updated)
-    throw new AppError(StatusCodes.NOT_FOUND, "VisaService not found");
-  return updated;
 };
 
 const deleteVisaService = async (id: string) => {

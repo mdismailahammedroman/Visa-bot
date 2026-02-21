@@ -105,4 +105,4 @@ const loadEnvVariables = (): EnvVar => {
   };
 };
 
-export const envVar = loadEnvVariables();
+export const envVar = loadEnvVariables()

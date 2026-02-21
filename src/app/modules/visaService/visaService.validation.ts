@@ -1,5 +1,6 @@
 // src/modules/visaService/visaService.validation.ts
 import { z } from "zod";
+import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
 
 const VisaCategoryItemZod = z.object({
   category: z.enum([
@@ -30,15 +31,31 @@ const VisaCategoryItemZod = z.object({
 });
 
 export const createVisaServiceZodSchema = z.object({
-  body: z.object({
+ body: z.object({
+   
     serviceName: z.string().min(2),
-    slug: z.string().min(2),
+    slug: z.string().min(2).optional(),
+
     description: z.string().optional(),
-    currency: z.enum(["BDT", "USD"]).optional(),
-    visaCategories: z.array(VisaCategoryItemZod).min(1),
+    currency: z.string().optional(),
+
+    visaCategories: z.nativeEnum(VisaCategoryEnum),
+    visaType: z.nativeEnum(VisaTypeEnum),
+
+    maxStayDays: z.number().optional(),
+    applicationLink: z.string().url().optional(),
+
+    eligibleFor: z.array(z.string()).optional(),
+    requirements: z.array(z.string()).optional(),
+
+    processingTimeDays: z.number().optional(),
+    fees: z.number().optional(),
+    multipleEntries: z.boolean().optional(),
+    notes: z.string().optional(),
     isActive: z.boolean().optional(),
   }),
 });
+
 
 export const updateVisaServiceZodSchema = z.object({
   body: z.object({

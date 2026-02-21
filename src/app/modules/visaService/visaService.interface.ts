@@ -1,4 +1,4 @@
-import { Types } from "mongoose"; // assuming MongoDB ObjectId
+import { Types } from "mongoose";
 
 // ✅ Enums for Visa Category & Visa Type
 export enum VisaCategoryEnum {
@@ -20,29 +20,27 @@ export enum VisaTypeEnum {
   RESTRICTED = "Restricted",
 }
 
-// ✅ Visa Service Interface
+// ✅ Visa Service Interface (plain structure)
 export interface IVisaService {
   countryId: Types.ObjectId; // which country these rules apply to
-  serviceName: string; // e.g., "USA Visa Information & Apply"
-  slug: string; // unique identifier
+  serviceName: string;
+  slug?: string;
   description?: string;
+  currency?: string;
 
-  currency?: string; // default currency
-  // ✅ Multiple visa categories per service
-  visaCategories: {
-    category: VisaCategoryEnum;
-    visaType: VisaTypeEnum;
-    maxStayDays?: number;
-    applicationLink?: string;
-    eligibleFor?: string[];
-    requirements?: string[];
-    processingTimeDays?: number;
-    fees?: number;
-    multipleEntries?: boolean;
-    notes?: string;
-  }[];
-  isActive?: boolean; // service status
+  // ✅ Plain category fields (no array)
+  visaCategories: VisaCategoryEnum;
+  visaType: VisaTypeEnum;
+  maxStayDays?: number;
+  applicationLink?: string;
+  eligibleFor?: string[];
+  requirements?: string[];
+  processingTimeDays?: number;
+  fees?: number;
+  multipleEntries?: boolean;
+  notes?: string;
 
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

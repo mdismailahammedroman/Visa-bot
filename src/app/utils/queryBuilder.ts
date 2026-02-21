@@ -12,6 +12,8 @@ export type QueryParams = {
 export class QueryBuilder<T> {
   private query: any;
   private params: QueryParams;
+  private page = 1;
+  private limit = 10;
 
   constructor(query: any, params: QueryParams) {
     this.query = query;
@@ -21,11 +23,8 @@ export class QueryBuilder<T> {
   search(searchableFields: string[]) {
     if (this.params.search) {
       const regex = new RegExp(String(this.params.search), "i");
-
       this.query = this.query.find({
-        $or: searchableFields.map((field) => ({
-          [field]: regex,
-        })),
+        $or: searchableFields.map((field) => ({ [field]: regex })),
       });
     }
     return this;
@@ -36,7 +35,6 @@ export class QueryBuilder<T> {
     const exclude = ["search", "page", "limit", "sort", "fields"];
     exclude.forEach((key) => delete filters[key]);
 
-    // advanced filter (gte, lte etc.)
     let filterString = JSON.stringify(filters);
     filterString = filterString.replace(
       /\b(gte|gt|lte|lt)\b/g,
@@ -45,7 +43,6 @@ export class QueryBuilder<T> {
 
     const mongoFilter = JSON.parse(filterString);
     this.query = this.query.find(mongoFilter);
-
     return this;
   }
 
@@ -60,11 +57,10 @@ export class QueryBuilder<T> {
   }
 
   paginate() {
-    const page = Number(this.params.page) || 1;
-    const limit = Number(this.params.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    this.query = this.query.skip(skip).limit(limit);
+    this.page = Number(this.params.page) || 1;
+    this.limit = Number(this.params.limit) || 10;
+    const skip = (this.page - 1) * this.limit;
+    this.query = this.query.skip(skip).limit(this.limit);
     return this;
   }
 
@@ -78,7 +74,20 @@ export class QueryBuilder<T> {
     return this;
   }
 
-  build() {
-    return this.query;
+  // 🔹 নতুন method: buildWithMeta
+  async build() {
+    const total = await this.query.model.countDocuments(this.query.getQuery());
+    const data = await this.query;
+    const totalPage = Math.ceil(total / this.limit);
+
+    return {
+      data,
+      meta: {
+        page: this.page,
+        limit: this.limit,
+        total,
+        totalPage,
+      },
+    };
   }
 }
