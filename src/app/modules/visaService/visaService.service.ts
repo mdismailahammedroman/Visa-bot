@@ -15,10 +15,7 @@ const normalizeSlug = (value: string): string => {
     .replace(/-+/g, "-");
 };
 
-const createVisaServiceForCountry = async (
-  countryId: string,
-  payload: any,
-) => {
+const createVisaServiceForCountry = async (countryId: string, payload: any) => {
   const country = await CountryRepository.findById(countryId);
   if (!country) {
     throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
@@ -34,18 +31,25 @@ const createVisaServiceForCountry = async (
     }
 
     payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
-  payload.serviceName
-)}`
+      payload.serviceName,
+    )}`;
   } else {
     payload.slug = normalizeSlug(payload.slug);
   }
 
+  if (payload.visaCategories) {
+    payload.visaCategories = payload.visaCategories.toString().toLowerCase();
+  }
+
+  if (payload.visaType) {
+    payload.visaType = payload.visaType.toString().toLowerCase();
+  }
+
   // ✅ Check duplicate inside SAME country
-  const existing =
-    await VisaServiceRepository.findBySlugAndCountry(
-      payload.slug,
-      countryId,
-    );
+  const existing = await VisaServiceRepository.findBySlugAndCountry(
+    payload.slug,
+    countryId,
+  );
 
   if (existing) {
     throw new AppError(
@@ -69,11 +73,10 @@ const updateVisaService = async (id: string, payload: any) => {
   if (payload.slug) {
     payload.slug = normalizeSlug(payload.slug);
 
-    const duplicate =
-      await VisaServiceRepository.findBySlugAndCountry(
-        payload.slug,
-        existing.countryId.toString(),
-      );
+    const duplicate = await VisaServiceRepository.findBySlugAndCountry(
+      payload.slug,
+      existing.countryId.toString(),
+    );
 
     if (duplicate && duplicate.id !== id) {
       throw new AppError(
@@ -84,7 +87,7 @@ const updateVisaService = async (id: string, payload: any) => {
   }
 
   return await VisaServiceRepository.updateById(id, payload);
-}
+};
 
 const getVisaServicesByCountry = async (
   countryId: string,
@@ -122,19 +125,21 @@ const deleteVisaService = async (id: string) => {
   return deleted;
 };
 
-
-const getByCategory = async (countryId: string, category: string) => {
-  return await VisaServiceRepository.findByCountryAndCategory(
-    countryId,
-    category,
-  );
-};
-
-
 const getAllVisaServices = async (queryParams: QueryParams = {}) => {
   return await VisaServiceRepository.findAllVisaServices(queryParams);
 };
 
+const searchVisaServices = async (countryId: string, queryParams: QueryParams = {}) => {
+    const baseQuery = VisaServiceRepository.findByCountry(countryId);
+    const qb = new QueryBuilder(baseQuery, queryParams)
+      .search(["serviceName", "slug", "visaCategories", "visaType"])
+      .filter()
+      .sort()
+      .paginate()
+      .fields();
+    const result = await qb.build();
+    return result;
+};
 
 
 export const VisaServiceService = {
@@ -143,6 +148,6 @@ export const VisaServiceService = {
   getVisaServiceById,
   updateVisaService,
   deleteVisaService,
-  getByCategory,
   getAllVisaServices,
+  searchVisaServices,
 };

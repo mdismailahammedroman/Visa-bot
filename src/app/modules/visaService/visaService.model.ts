@@ -75,6 +75,9 @@ visaServiceSchema.set("toJSON", {
 visaServiceSchema.index({
   serviceName: "text",
   slug: "text",
+  visaCategories:"text",
+  visaType:"text",
+
 });
 
 export const VisaServiceModel = model<IVisaService>(

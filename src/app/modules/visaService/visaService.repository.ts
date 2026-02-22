@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { VisaServiceModel } from "./visaService.model";
 import { IVisaService } from "./visaService.interface";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
@@ -21,14 +22,6 @@ const updateById = (id: string, payload: Partial<IVisaService>) =>
 
 const deleteById = (id: string) => VisaServiceModel.findByIdAndDelete(id);
 
-// findByCountryAndCategory wise visa services
-const findByCountryAndCategory = (countryId: string, category: string) =>
-  VisaServiceModel.find({
-    countryId,
-    visaCategories: category,
-    isActive: true,
-  }).lean();
-
 // /findAllVisaServices
 
 const findAllVisaServices = async (queryParams: QueryParams = {}) => {
@@ -44,6 +37,7 @@ const findAllVisaServices = async (queryParams: QueryParams = {}) => {
   return await qb.build();
 };
 
+const searchVisaServices = (query: any) => VisaServiceModel.find(query);
 
 export const VisaServiceRepository = {
   create,
@@ -52,6 +46,6 @@ export const VisaServiceRepository = {
   findBySlugAndCountry,
   updateById,
   deleteById,
-  findByCountryAndCategory,
   findAllVisaServices,
+  searchVisaServices,
 };

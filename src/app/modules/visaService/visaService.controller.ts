@@ -71,7 +71,6 @@ const update = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 /**
  * delete service
  */
@@ -93,36 +92,43 @@ const deleteService = CatchAsync(async (req: Request, res: Response) => {
  * getByCategory
  */
 
-const getByCategory = CatchAsync(async (req: Request, res: Response) => {
-  const { countryId, category } = req.params;
-
-  const result = await VisaServiceService.getByCategory(
-    countryId as string,
-    category as string,
-  );
-
-  return sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "VisaServices fetched successfully",
-    data: result,
-  });
-});
-
 /**
  * get all visa services
  */
-const getAllVisaServicesController = CatchAsync(async (req: Request, res: Response) => {
-  const result = await VisaServiceService.getAllVisaServices(req.query as QueryParams);
+const getAllVisaServicesController = CatchAsync(
+  async (req: Request, res: Response) => {
+    const result = await VisaServiceService.getAllVisaServices(
+      req.query as QueryParams,
+    );
 
-  return sendResponse(res, {
-    success: true,
-    message: "Retrieve all visa services",
-    statusCode: StatusCodes.OK,
-    data: result.data,
-    meta: result.meta,
+    return sendResponse(res, {
+      success: true,
+      message: "Retrieve all visa services",
+      statusCode: StatusCodes.OK,
+      data: result.data,
+      meta: result.meta,
+    });
+  },
+);
+
+/**+
+ * searchVisaServicesController
+ */
+
+  const searchVisaServicesController= CatchAsync(async (req: Request, res: Response) => {
+    const countryId = req.params.countryId;
+    if (!countryId) throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
+
+    const result = await VisaServiceService.searchVisaServices(countryId as string, req.query as QueryParams);
+
+    return sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "VisaServices fetched successfully",
+      data: result.data,
+      meta: result.meta,
+    });
   });
-});
 
 export const VisaServiceController = {
   createForCountry,
@@ -130,6 +136,6 @@ export const VisaServiceController = {
   getOne,
   update,
   delete: deleteService,
-  getByCategory,
+  searchVisaServicesController,
   getAllVisaServicesController,
 };

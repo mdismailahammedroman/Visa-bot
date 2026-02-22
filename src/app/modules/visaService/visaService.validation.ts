@@ -6,14 +6,16 @@ export const createVisaServiceZodSchema = z.object({
     serviceName: z.string().min(2),
     slug: z.string().min(2).optional(),
 
+    visaCategories: z
+      .enum(VisaCategoryEnum)
+      .transform((val) => val.toLowerCase()),
+
+    visaType: z.enum(VisaTypeEnum).transform((val) => val.toLowerCase()),
+
     description: z.string().optional(),
     currency: z.string().optional(),
-
-    visaCategories: z.nativeEnum(VisaCategoryEnum),
-    visaType: z.nativeEnum(VisaTypeEnum),
-
     maxStayDays: z.number().optional(),
-    applicationLink: z.string().url().optional(),
+
     eligibleFor: z.array(z.string()).optional(),
     requirements: z.array(z.string()).optional(),
     processingTimeDays: z.number().optional(),
@@ -35,7 +37,7 @@ export const updateVisaServiceZodSchema = z.object({
     visaType: z.nativeEnum(VisaTypeEnum).optional(),
 
     maxStayDays: z.number().optional(),
-    applicationLink: z.string().url().optional(),
+
     eligibleFor: z.array(z.string()).optional(),
     requirements: z.array(z.string()).optional(),
     processingTimeDays: z.number().optional(),

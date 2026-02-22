@@ -20,6 +20,14 @@ router.post(
   VisaServiceController.createForCountry,
 );
 
+
+// "/visa-services/search"
+router.get(
+  "/visa-services/search",
+  checkAuth(...Object.values(Role)),
+  VisaServiceController.searchVisaServicesController,
+);
+
 /**
  * Get services by country (pagination supported)
  */
@@ -27,6 +35,16 @@ router.get(
   "/countries/:countryId/visa-services",
   checkAuth(...Object.values(Role)),
   VisaServiceController.getByCountry,
+);
+
+
+/**+
+ * getAll
+ */
+router.get(
+  "/visa-services",
+  checkAuth(...Object.values(Role)),
+  VisaServiceController.getAllVisaServicesController,
 );
 
 /**
@@ -48,28 +66,14 @@ router.patch(
   VisaServiceController.update,
 );
 
-/**
- * getByCategory
- */
-router.get(
-  "/countries/:countryId/visa-services/category/:category",
-  checkAuth(...Object.values(Role)),
-  VisaServiceController.getByCategory,
-);
-
-
-/**+
- * getAll
- */
-router.get("/visa-services", checkAuth(...Object.values(Role)), VisaServiceController.getAllVisaServicesController);
 
 /**
  * Delete service
  */
-router.delete(
-  "/visa-services/:id",
-  checkAuth(Role.ADMIN),
-  VisaServiceController.delete,
+router.get(
+  "/visa-services/search/:countryId",
+  checkAuth(...Object.values(Role)),
+  VisaServiceController.searchVisaServicesController
 );
 
 export const visaServiceRouter = router;
