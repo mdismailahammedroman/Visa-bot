@@ -81,9 +81,7 @@ const userSchema = new Schema<IUser>(
 );
 
 /* ---------------- Indexes ---------------- */
-userSchema.index({ status: 1 });
-userSchema.index({ role: 1 });
-
+userSchema.index({ status: 1, role: 1, isDeleted: 1 });
 /* ---------------- Soft Delete Middleware ---------------- */
 userSchema.pre(/^find/, function (this: Query<IUser, IUser>) {
   this.where({ isDeleted: false }); // soft delete

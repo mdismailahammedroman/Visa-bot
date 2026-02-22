@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { socketRouter } from "../modules/socket/socket.routes";
-import { countryRouter } from "../modules/country/countries.routes";
+import { countryRouter } from "../modules/country/country.routes";
 import { authRouter } from "../modules/auth/auth.route";
 import { otpRouter } from "../modules/Otp/otp.route";
 import { userRouter } from "../modules/user/user.route";
+import { visaServiceRouter } from "../modules/visaService/visaService.route";
 
 export const router = Router();
 
@@ -27,6 +28,10 @@ const routes = [
   {
     path: "/country",
     route: countryRouter,
+  },
+  {
+    path: "/visa",
+    route: visaServiceRouter,
   },
 ];
 routes.forEach((route) => {

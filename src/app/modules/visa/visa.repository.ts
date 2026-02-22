@@ -1,39 +1,30 @@
 // src/modules/visa/visa.repository.ts
-import { Types } from "mongoose";
+import { IVisaApplication } from "./visa.interface";
 import { VisaApplicationModel } from "./visa.model";
-import { IVisaApplication, StepKey } from "./visa.interface";
+import { Types } from "mongoose";
 
-const createDraft = (userId: Types.ObjectId) => {
+const createVisaApplication = (userId: Types.ObjectId) => {
   return VisaApplicationModel.create({ userId });
 };
 
-const findById = (appId: string) => {
-  return VisaApplicationModel.findById(appId);
+const findById = (id: string) => {
+  return VisaApplicationModel.findById(id);
 };
 
-const findByIdAndUser = (appId: string, userId: Types.ObjectId) => {
-  return VisaApplicationModel.findOne({ _id: appId, userId });
+const updateVisaApplication = (
+  id: string,
+  update: Partial<IVisaApplication>,
+) => {
+  return VisaApplicationModel.findByIdAndUpdate(id, update, { new: true });
 };
 
-const updateById = (appId: string, update: Partial<IVisaApplication>) => {
-  return VisaApplicationModel.findByIdAndUpdate(appId, update, { new: true });
+const findByUserId = (userId: string) => {
+  return VisaApplicationModel.find({ userId }).sort({ createdAt: -1 });
 };
 
-const pushCompletedStep = (appId: string, step: StepKey, nextStep: StepKey) => {
-  return VisaApplicationModel.findByIdAndUpdate(
-    appId,
-    {
-      $addToSet: { completedSteps: step },
-      $set: { currentStep: nextStep },
-    },
-    { new: true },
-  );
-};
-
-export const VisaApplicationRepository = {
-  createDraft,
+export const VisaRepository = {
+  createVisaApplication,
   findById,
-  findByIdAndUser,
-  updateById,
-  pushCompletedStep,
+  updateVisaApplication,
+  findByUserId,
 };

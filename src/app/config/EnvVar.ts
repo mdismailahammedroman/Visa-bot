@@ -35,6 +35,7 @@ interface EnvVar {
   REDIS: REDIS_TYPE;
   CLOUDINARY: CLOUDINARY_TYPE;
   SMTP: SMTP_TYPE;
+  FIXER_API_KEY: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -62,6 +63,7 @@ const loadEnvVariables = (): EnvVar => {
     "SMTP_PASSWORD",
     "SMTP_FROM_EMAIL",
     "SMTP_FROM_NAME",
+    "FIXER_API_KEY",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -99,7 +101,8 @@ const loadEnvVariables = (): EnvVar => {
       SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL as string,
       SMTP_FROM_NAME: process.env.SMTP_FROM_NAME as string,
     },
+    FIXER_API_KEY: process.env.FIXER_API_KEY as string,
   };
 };
 
-export const envVar = loadEnvVariables();
+export const envVar = loadEnvVariables()

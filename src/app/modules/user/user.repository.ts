@@ -10,18 +10,19 @@ import {
 import { User } from "./user.model";
 
 const findByEmail = (email: string) => {
-  if (!email) return null as any; // or throw error
-  return User.findOne({ email: email.toLowerCase() }).exec();
+  if (!email) return null;
+  return User.findOne({ email: email.toLowerCase() }).lean().exec();
 };
 
 const findByEmailWithPassword = (email: string) => {
   return User.findOne({ email: email.toLowerCase() })
     .select("+password")
+
     .exec();
 };
 
 const findById = (id: string) => {
-  return User.findById(id);
+  return User.findById(id).lean().exec();
 };
 
 const register = (payload: TCreateUserPayload) => {
@@ -37,7 +38,9 @@ const updateStatusByEmail = (email: string, status: UserStatus) => {
     { email: email.toLowerCase() },
     { status },
     { new: true },
-  ).exec();
+  )
+    .lean()
+    .exec();
 };
 
 const updatePasswordByEmail = async (email: string, newPassword: string) => {
@@ -59,7 +62,9 @@ const verifyOtpByEmail = (email: string, update: Partial<IUser>) => {
     { email: email.toLowerCase() },
     { $set: update },
     { new: true, runValidators: true },
-  ).exec();
+  )
+    .lean()
+    .exec();
 };
 // updateUserById
 const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
@@ -67,23 +72,33 @@ const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
     userId,
     { $set: update },
     { new: true, runValidators: true },
-  ).exec();
+  )
+    .lean()
+    .exec();
 };
 
 const invalidateToken = async (userId: string) => {
-  return await User.findByIdAndUpdate(userId, { refreshToken: null });
+  return await User.findByIdAndUpdate(userId, { refreshToken: null })
+    .lean()
+    .exec();
 };
 
 const getAllUsersWithQuery = (params: QueryParams) => {
-  const query = new QueryBuilder(User.find(), params)
+  return new QueryBuilder(User.find(), params)
     .search(["name", "email"])
     .filter()
     .sort()
     .paginate()
     .fields()
     .build();
+};
 
-  return query.exec();
+const deleteUserById = (userId: string) => {
+  return User.findByIdAndDelete(userId).lean().exec(); // lean + fast
+};
+
+const findByIdWithPassword = (id: string) => {
+  return User.findById(id).select("+password").exec();
 };
 
 // export  userRepository
@@ -91,12 +106,14 @@ const getAllUsersWithQuery = (params: QueryParams) => {
 export const userRepository = {
   findByEmail,
   findByEmailWithPassword,
+  findByIdWithPassword,
   findById,
   register,
   updatePasswordByEmail,
   updateStatusByEmail,
   verifyOtpByEmail,
   updateUser,
+  deleteUserById,
   invalidateToken,
   getAllUsersWithQuery,
 };

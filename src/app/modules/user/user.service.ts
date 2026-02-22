@@ -1,4 +1,3 @@
-import { User } from "./user.model";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
@@ -27,7 +26,7 @@ const registerUser = async (payload: TCreateUserPayload) => {
     password: passwordHash,
   });
   await otpService.sendOtp(newUser.email, "NEW_USER_VERIFY", newUser.name);
-  return newUser; // remove password before sending
+  return newUser;
 };
 
 const updateUser = async (
@@ -76,9 +75,12 @@ const getByMySelf = async (userId: string) => {
 
 const getAllUsersForAdmin = async (
   queryParams: QueryParams,
-): Promise<IUser[]> => {
-  const users = await userRepository.getAllUsersWithQuery(queryParams);
-  return users;
+): Promise<{ data: IUser[]; meta: any }> => {
+  const usersWithMeta = await userRepository.getAllUsersWithQuery(queryParams);
+  return {
+    data: usersWithMeta.data,
+    meta: usersWithMeta.meta,
+  };
 };
 
 const getUserProfileForAdmin = async (userId: string) => {
@@ -158,14 +160,9 @@ const changeUserRole = async (adminUser: IUser, userId: string, role: Role) => {
 
 const deleteMyAccount = async (userId: string) => {
   const user = await userRepository.findById(userId);
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-  if (!user) {
-    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
-  }
-
-  // Hard delete the user from the database
-  await User.findByIdAndDelete(userId);
-
+  await userRepository.deleteUserById(userId); // repository handles hard delete
   return null;
 };
 
