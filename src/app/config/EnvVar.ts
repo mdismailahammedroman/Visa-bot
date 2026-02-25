@@ -17,6 +17,13 @@ interface SMTP_TYPE {
   SMTP_FROM_NAME?: string;
 }
 
+interface aws_S3_type {
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+  AWS_REGION: string;
+  AWS_BUCKET_NAME: string;
+}
+
 interface EnvVar {
   PORT: string;
   MONGODB_URL: string;
@@ -29,7 +36,7 @@ interface EnvVar {
   EXPRESS_SESSION_SECRET: string;
   FRONTEND_URL: string;
   REDIS: REDIS_TYPE;
-
+  aws_S3: aws_S3_type;
   SMTP: SMTP_TYPE;
   FIXER_API_KEY: string;
 }
@@ -50,6 +57,11 @@ const loadEnvVariables = (): EnvVar => {
     "REDIS_PORT",
     "REDIS_USERNAME",
     "REDIS_PASSWORD",
+
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_REGION",
+    "AWS_BUCKET_NAME",
 
     "SMTP_HOST",
     "SMTP_PORT",
@@ -81,6 +93,12 @@ const loadEnvVariables = (): EnvVar => {
       REDIS_PORT: process.env.REDIS_PORT as string,
       REDIS_USERNAME: process.env.REDIS_USERNAME as string,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
+    },
+    aws_S3: {
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_ACCESS_KEY_ID as string,
+      AWS_REGION: process.env.AWS_REGION as string,
+      AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME as string,
     },
 
     SMTP: {
