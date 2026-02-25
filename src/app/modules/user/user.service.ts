@@ -32,6 +32,7 @@ const registerUser = async (payload: TCreateUserPayload) => {
 const updateUser = async (
   userId: string,
   update: Partial<TUpdateUserProfile>,
+  file?: Express.MulterS3.File,
 ) => {
   const user = await userRepository.findById(userId);
 
@@ -48,6 +49,12 @@ const updateUser = async (
   if (user.status !== UserStatus.ACTIVE) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "User is not active");
   }
+
+  // If file uploaded, update profile picture URL
+  if (file) {
+    update.profile_picture = file.location; // S3 public URL
+  }
+
   const updatedUser = await userRepository.updateUser(userId, update);
 
   return updatedUser;

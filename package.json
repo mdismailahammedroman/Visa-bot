@@ -15,8 +15,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.997.0",
     "@aws-sdk/types": "^3.973.2",
     "@types/compression": "^1.8.1",
+    "@types/multer-s3": "^3.0.3",
     "@types/nodemailer": "^7.0.9",
     "@types/passport": "^1.0.17",
     "aws-sdk": "^2.1693.0",
