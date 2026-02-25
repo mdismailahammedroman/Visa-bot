@@ -28,7 +28,7 @@ const applyVisaService = async (userId: string, visaServiceId: string) => {
 
   // fees snapshot from service
   const visaFee = Number(visaService.fees || 0);
-  const serviceFee = 0; // তোমার business rule অনুযায়ী set করো
+  const serviceFee = 0; 
   const totalFee = visaFee + serviceFee;
 
   const payload: Partial<IVisaApplication> = {
@@ -84,7 +84,7 @@ const updateApplicationDraft = async (
   const updated = await VisaApplicationRepository.updateById(applicationId, payload);
   return updated;
 };
-
+          
 // ✅ Submit
 const submitApplication = async (userId: string, applicationId: string) => {
   const app = await VisaApplicationRepository.findByIdAndUser(
@@ -105,6 +105,15 @@ const submitApplication = async (userId: string, applicationId: string) => {
     app.birthDate,
     app.passportNumber,
     app.gender,
+    app.visaFee,
+    app.incomeSource,
+    app.monthlyIncome,
+    app.bankName,
+    app.accountNumber,
+    app.bankStatement,
+    app.passportCopy,
+    app.passportPhoto,
+    app.oldVisaCopy,
   ];
 
   if (required.some((x) => !x)) {

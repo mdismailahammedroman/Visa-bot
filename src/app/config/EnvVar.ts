@@ -7,11 +7,7 @@ interface REDIS_TYPE {
   REDIS_USERNAME: string;
   REDIS_PASSWORD: string;
 }
-interface CLOUDINARY_TYPE {
-  CLOUDINARY_NAME: string;
-  CLOUDINARY_API_KEY: string;
-  CLOUDINARY_SECRET: string;
-}
+
 interface SMTP_TYPE {
   SMTP_HOST: string;
   SMTP_PORT: string;
@@ -33,7 +29,7 @@ interface EnvVar {
   EXPRESS_SESSION_SECRET: string;
   FRONTEND_URL: string;
   REDIS: REDIS_TYPE;
-  CLOUDINARY: CLOUDINARY_TYPE;
+
   SMTP: SMTP_TYPE;
   FIXER_API_KEY: string;
 }
@@ -54,9 +50,7 @@ const loadEnvVariables = (): EnvVar => {
     "REDIS_PORT",
     "REDIS_USERNAME",
     "REDIS_PASSWORD",
-    "CLOUDINARY_NAME",
-    "CLOUDINARY_API_KEY",
-    "CLOUDINARY_SECRET",
+
     "SMTP_HOST",
     "SMTP_PORT",
     "SMTP_USER",
@@ -88,11 +82,7 @@ const loadEnvVariables = (): EnvVar => {
       REDIS_USERNAME: process.env.REDIS_USERNAME as string,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
     },
-    CLOUDINARY: {
-      CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
-      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
-      CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET as string,
-    },
+
     SMTP: {
       SMTP_HOST: process.env.SMTP_HOST as string,
       SMTP_PORT: process.env.SMTP_PORT as string,
@@ -105,4 +95,4 @@ const loadEnvVariables = (): EnvVar => {
   };
 };
 
-export const envVar = loadEnvVariables()
+export const envVar = loadEnvVariables();

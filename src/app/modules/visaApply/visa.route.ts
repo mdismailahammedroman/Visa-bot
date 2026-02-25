@@ -9,7 +9,7 @@ const router = express.Router();
 // -------------------- USER --------------------
 router.post(
   "/apply/:visaServiceId",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   VisaApplicationController.apply,
 );
 
@@ -53,4 +53,4 @@ router.patch(
   VisaApplicationController.updateStatus,
 );
 
-export default router;
+export const visaApplicationRoute = router;

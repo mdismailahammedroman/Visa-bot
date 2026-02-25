@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
-import { IVisaApplication } from "./visa.interface";
 import {
+  IVisaApplication,
   ApplicationStatus,
   IncomeSource,
   PaymentStatus,
@@ -12,29 +12,27 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
     trackingId: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
     },
 
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
+      index: true, // ok
     },
 
     visaServiceId: {
       type: Schema.Types.ObjectId,
       ref: "VisaService",
       required: true,
-      index: true,
+      index: true, // ok
     },
 
     countryId: {
       type: Schema.Types.ObjectId,
       ref: "Country",
       required: true,
-      index: true,
+      index: true, // ok
     },
 
     isDraft: {
@@ -43,85 +41,62 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
       index: true,
     },
 
-    // ========================
-    // Personal Information
-    // ========================
-
+    // Personal
     fullName: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },
     phoneNumber: { type: String, trim: true },
     birthDate: { type: Date },
     passportNumber: { type: String, trim: true },
-
-    gender: {
-      type: String,
-      enum: Object.values(GENDER_TYPE),
-    },
-
+    gender: { type: String, enum: Object.values(GENDER_TYPE) },
     visaType: { type: String, trim: true },
 
-    // ========================
-    // Financial Information
-    // ========================
-
-    incomeSource: {
-      type: String,
-      enum: Object.values(IncomeSource),
-    },
-
+    // Financial
+    incomeSource: { type: String, enum: Object.values(IncomeSource) },
     monthlyIncome: { type: Number },
     bankName: { type: String, trim: true },
     accountNumber: { type: String, trim: true },
     bankStatement: { type: String },
 
-    // ========================
-    // Documents (S3 URLs)
-    // ========================
-
+    // Documents
     passportCopy: { type: String },
     passportPhoto: { type: String },
     oldVisaCopy: { type: String },
 
-    // ========================
     // Fees
-    // ========================
-
     visaFee: { type: Number, default: 0 },
     serviceFee: { type: Number, default: 0 },
     totalFee: { type: Number, default: 0 },
 
-    // ========================
     // Payment
-    // ========================
-
     paymentStatus: {
       type: String,
       enum: Object.values(PaymentStatus),
       default: PaymentStatus.UNPAID,
     },
 
-    // ========================
-    // Application Status
-    // ========================
-
+    // Status
     status: {
       type: String,
       enum: Object.values(ApplicationStatus),
       default: ApplicationStatus.DRAFT,
-      index: true,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true, versionKey: false },
 );
 
-// Indexes
+// ✅ Indexes (clean & useful)
+visaApplicationSchema.index({ trackingId: 1 }, { unique: true });
+
+// ✅ only one active draft per user per visaService
+visaApplicationSchema.index(
+  { userId: 1, visaServiceId: 1 },
+  { unique: true, partialFilterExpression: { isDraft: true } },
+);
+
+// ✅ fast manager filters
+visaApplicationSchema.index({ status: 1, createdAt: -1 });
+visaApplicationSchema.index({ paymentStatus: 1, createdAt: -1 });
 visaApplicationSchema.index({ userId: 1, createdAt: -1 });
-visaApplicationSchema.index({ visaServiceId: 1, createdAt: -1 });
-visaApplicationSchema.index({ trackingId: 1 });
-visaApplicationSchema.index({ status: 1 });
-visaApplicationSchema.index({ paymentStatus: 1 });
 
 export const VisaApplicationModel = model<IVisaApplication>(
   "VisaApplication",
