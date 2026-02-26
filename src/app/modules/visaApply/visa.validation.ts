@@ -41,16 +41,15 @@ export const stepPersonalSchema = z.object({
 
 export const stepFinancialSchema = z.object({
   body: z.object({
-    occupationType: z.enum([
-      "BUSINESS",
-      "FREELANCE",
-      "EMPLOYED",
-      "STUDENT",
-      "OTHER",
+    incomeSource: z.enum([
+      "Self funded trip",
+      "Friend or family",
+      "Employee business travel",
     ]),
+    monthlyIncome: z.number().min(0).optional(),
     bankName: z.string().min(2),
     accountNumber: z.string().min(6),
-    bankStatementFileUrl: z.string().url(),
+    bankStatement: z.string().url(),
   }),
 });
 

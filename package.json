@@ -15,7 +15,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.997.0",
+    "@aws-sdk/types": "^3.973.2",
     "@types/compression": "^1.8.1",
+    "@types/multer-s3": "^3.0.3",
     "@types/nodemailer": "^7.0.9",
     "@types/passport": "^1.0.17",
     "aws-sdk": "^2.1693.0",
@@ -37,6 +40,7 @@
     "mongoose": "^9.1.5",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.13",
     "passport": "^0.7.0",
@@ -65,6 +69,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0"

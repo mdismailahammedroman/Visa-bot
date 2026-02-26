@@ -4,6 +4,7 @@ import { validateRequest } from "../../helpers/validateRequest";
 import { checkAuth } from "../../middlewares/checkAuth.middleware";
 import { registerUserZodSchema, updateUserZodSchema } from "./user.validation";
 import { Role } from "./user.interface";
+import { uploadSingle } from "../../middlewares/uploadS3";
 
 export const router = Router();
 router.post(
@@ -15,6 +16,7 @@ router.post(
 router.patch(
   "/update-user",
   checkAuth(...Object.values(Role)),
+  uploadSingle("profile_picture"),
   validateRequest(updateUserZodSchema),
   userController.updateUser,
 );

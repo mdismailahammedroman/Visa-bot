@@ -5,6 +5,7 @@ import { authRouter } from "../modules/auth/auth.route";
 import { otpRouter } from "../modules/Otp/otp.route";
 import { userRouter } from "../modules/user/user.route";
 import { visaServiceRouter } from "../modules/visaService/visaService.route";
+import { visaApplicationRoute } from "../modules/visaApply/visa.route";
 
 export const router = Router();
 
@@ -32,6 +33,10 @@ const routes = [
   {
     path: "/visa",
     route: visaServiceRouter,
+  },
+  {
+    path: "/apply-visa",
+    route: visaApplicationRoute,
   },
 ];
 routes.forEach((route) => {

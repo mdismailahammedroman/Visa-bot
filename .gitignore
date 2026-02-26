@@ -26,3 +26,7 @@ out
 target
 *.iml
 .vscode/
+# Docker files
+*.dockerignore
+Dockerfile
+docker-compose.yml
