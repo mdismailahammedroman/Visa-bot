@@ -18,14 +18,14 @@ router.post(
     { name: "oldVisaCopy", maxCount: 1 },
     { name: "bankStatement", maxCount: 1 },
   ]),
-  checkAuth(Role.USER, Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER),
+  checkAuth(Role.USER),
   validateRequest(createVisaApplicationZodSchema),
   VisaApplicationController.createVisaApplication,
 );
 
-router.post(
-  "/apply/:visaServiceId",
-  checkAuth((Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER)),
+router.get(
+  "/apply",
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER),
   VisaApplicationController.getAllVisaApplications,
 );
 

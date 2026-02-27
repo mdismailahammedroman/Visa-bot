@@ -24,8 +24,7 @@ const createVisaApplication = CatchAsync(
       oldVisaCopy: files.oldVisaCopy?.[0]?.location,
       bankStatement: files.bankStatement?.[0]?.location,
     };
-    console.log("Files:", req.files);
-    console.log("Body:", req.body);
+
 
     const result = await VisaApplicationService.createVisaApplication(payload);
 
