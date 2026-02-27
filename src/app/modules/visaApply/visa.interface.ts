@@ -6,9 +6,8 @@ import { GENDER_TYPE } from "../user/user.interface";
 ========================= */
 
 export enum ApplicationStatus {
-  DRAFT = "Draft",
   PENDING = "Pending",
-  PROCESSING = "Processing",
+  PROCESSING = "InProcessing",
   APPROVED = "Approved",
   REJECTED = "Rejected",
 }
@@ -20,9 +19,9 @@ export enum PaymentStatus {
 }
 
 export enum IncomeSource {
-  SELF_FUNDED = "Self funded trip",
-  FRIEND_OR_FAMILY = "Friend or family",
-  EMPLOYEE_BUSINESS_TRAVEL = "Employee business travel",
+  SELF_FUNDED = "Self Funded",
+  FRIEND_OR_FAMILY = "Friend or Family",
+  EMPLOYEE_BUSINESS_TRAVEL = "Employee Business Travel",
 }
 
 /* =========================
@@ -37,8 +36,6 @@ export interface IVisaApplication {
   userId: Types.ObjectId;
   visaServiceId: Types.ObjectId;
   countryId: Types.ObjectId;
-
-  isDraft: boolean;
 
   // Personal
   fullName?: string;

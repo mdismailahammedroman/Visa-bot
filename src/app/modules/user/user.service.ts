@@ -111,8 +111,6 @@ const getUserProfileForAdmin = async (userId: string) => {
     status: user.status,
     role: user.role,
 
-    visaStatus: user.visaStatus,
-    paymentStatus: user.paymentStatus,
 
     memberSince: user.createdAt,
     lastLogin: user.lastLoginAt,

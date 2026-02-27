@@ -38,17 +38,7 @@ export interface ICoord {
   long?: number; // Longitude (for backward compatibility)
 }
 
-export enum PaymentStatus {
-  PAID = "PAID",
-  UNPAID = "UNPAID",
-  PENDING = "PENDING",
-}
 
-export enum VisaStatus {
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-  PENDING = "PENDING",
-}
 
 export interface IUser {
   _id: string;
@@ -66,9 +56,6 @@ export interface IUser {
   profile_picture?: string;
   coverPicture?: string;
   coordinate: ICoord;
-
-  visaStatus?: VisaStatus;
-  paymentStatus?: PaymentStatus;
 
   lastLoginAt?: Date;
 

@@ -11,7 +11,8 @@ export const uploadSingle = (fieldName: string) =>
     storage: multerS3({
       s3: s3 as any, // TS workaround for v3
       bucket: envVar.AWS_S3.AWS_BUCKET_NAME,
-   
+
+
       key: (req, file, cb) => {
         const fileName = `users/${Date.now()}-${file.originalname}`;
         cb(null, fileName);
@@ -24,7 +25,8 @@ export const uploadToS3 = multer({
   storage: multerS3({
     s3: s3 as any,
     bucket: envVar.AWS_S3.AWS_BUCKET_NAME,
- 
+
+
     key: (req, file, cb) => {
       const ext = file.originalname.split(".").pop();
       cb(null, `visa-docs/${file.fieldname}-${Date.now()}.${ext}`);
@@ -45,4 +47,3 @@ export const uploadToS3 = multer({
     }
   },
 });
-

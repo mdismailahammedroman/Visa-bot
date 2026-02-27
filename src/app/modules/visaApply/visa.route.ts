@@ -3,54 +3,52 @@ import { VisaApplicationController } from "./visa.controller";
 
 import { Role } from "../user/user.interface";
 import { checkAuth } from "../../middlewares/checkAuth.middleware";
+import { uploadToS3 } from "../../middlewares/uploadS3";
+import { validateRequest } from "../../helpers/validateRequest";
+import { createVisaApplicationZodSchema } from "./visa.validation";
 
 const router = express.Router();
 
 // -------------------- USER --------------------
 router.post(
   "/apply/:visaServiceId",
-  checkAuth(...Object.values(Role)),
-  VisaApplicationController.apply,
-);
-
-router.patch(
-  "/:id",
-  checkAuth(Role.USER),
-  VisaApplicationController.updateDraft,
+  uploadToS3.fields([
+    { name: "passportCopy", maxCount: 1 },
+    { name: "passportPhoto", maxCount: 1 },
+    { name: "oldVisaCopy", maxCount: 1 },
+    { name: "bankStatement", maxCount: 1 },
+  ]),
+  checkAuth(Role.USER, Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER),
+  validateRequest(createVisaApplicationZodSchema),
+  VisaApplicationController.createVisaApplication,
 );
 
 router.post(
-  "/:id/submit",
-  checkAuth(Role.USER),
-  VisaApplicationController.submit,
+  "/apply/:visaServiceId",
+  checkAuth((Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER)),
+  VisaApplicationController.getAllVisaApplications,
 );
 
-router.get(
-  "/me",
-  checkAuth(Role.USER),
-  VisaApplicationController.myApplications,
-);
+// // optional payment endpoint (user)
+// router.post("/:id/pay", checkAuth(Role.USER), VisaApplicationController.pay);
 
-// optional payment endpoint (user)
-router.post("/:id/pay", checkAuth(Role.USER), VisaApplicationController.pay);
+// // -------------------- MANAGER / MAIN_MANAGER --------------------
+// router.get(
+//   "/",
+//   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+//   VisaApplicationController.getAllForManager,
+// );
 
-// -------------------- MANAGER / MAIN_MANAGER --------------------
-router.get(
-  "/",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-  VisaApplicationController.getAllForManager,
-);
+// router.get(
+//   "/:id/admin",
+//   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+//   VisaApplicationController.getOneForManager,
+// );
 
-router.get(
-  "/:id/admin",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-  VisaApplicationController.getOneForManager,
-);
-
-router.patch(
-  "/:id/status",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-  VisaApplicationController.updateStatus,
-);
+// router.patch(
+//   "/:id/status",
+//   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+//   VisaApplicationController.updateStatus,
+// );
 
 export const visaApplicationRoute = router;
