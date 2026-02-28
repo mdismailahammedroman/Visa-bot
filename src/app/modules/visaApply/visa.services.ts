@@ -70,6 +70,17 @@ const getAllForManager = async (queryParams: any) => {
   return result;
 };
 
+const getOneForManager = async (id: string) => {
+  const result = await VisaApplicationRepository.findById(id);
+
+  if (!result) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
+  }
+
+  return result;
+};
+
+
 
 
 export const VisaApplicationService = {
@@ -77,6 +88,7 @@ export const VisaApplicationService = {
   getAllVisaApplications,
   payVisaApplication,
   getAllForManager,
+  getOneForManager,
 
 
 };
