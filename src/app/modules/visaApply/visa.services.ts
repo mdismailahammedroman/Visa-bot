@@ -96,7 +96,13 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
   return updated;
 };
 
-
+const deleteVisaApplication =async (id:string)=>{
+  const deleted =await VisaServiceRepository.deleteById(id);
+  if (deleted) {
+    throw new AppError(StatusCodes.NOT_FOUND, "visa application not found");
+  }
+  return deleted;
+}
 
 export const VisaApplicationService = {
   createVisaApplication,
@@ -105,5 +111,5 @@ export const VisaApplicationService = {
   getAllForManager,
   getOneForManager,
   updateStatus,
-
+  deleteVisaApplication,
 };

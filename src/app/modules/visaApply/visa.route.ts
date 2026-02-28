@@ -54,6 +54,10 @@ router.post(
 //   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
 //   VisaApplicationController.updateStatus,
 // );
-
+router.patch(
+  "/:id/status",
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+  VisaApplicationController.deleteVisaApplication,
+);
 
 export const visaApplicationRoute = router;
