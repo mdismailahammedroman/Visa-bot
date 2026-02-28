@@ -2,7 +2,7 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
 import {
-
+  ApplicationStatus,
   IVisaApplication,
   PaymentStatus,
 } from "./visa.interface";
@@ -80,6 +80,21 @@ const getOneForManager = async (id: string) => {
   return result;
 };
 
+const updateStatus = async (id: string, status: ApplicationStatus) => {
+  const allowedStatuses = ["PENDING", "PROCESSING", "APPROVED", "REJECTED"];
+
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status value");
+  }
+
+  const updated = await VisaApplicationRepository.updateById(id, { status });
+
+  if (!updated) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
+  }
+
+  return updated;
+};
 
 
 
@@ -89,6 +104,6 @@ export const VisaApplicationService = {
   payVisaApplication,
   getAllForManager,
   getOneForManager,
-
+  updateStatus,
 
 };

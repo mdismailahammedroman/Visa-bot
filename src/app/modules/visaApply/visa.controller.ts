@@ -98,6 +98,21 @@ const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
 });
 
 
+// 🔹 Update Status (Manager)
+ const updateStatus = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const result = await VisaApplicationService.updateStatus(id as string, status);
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Visa application status updated successfully",
+    data: result,
+  });
+});
+
 
 export const VisaApplicationController = {
   // user controllers:
@@ -108,6 +123,6 @@ export const VisaApplicationController = {
   // manager controllers:
   getAllForManager,
   getOneForManager,
-
+  updateStatus,
 
 };
