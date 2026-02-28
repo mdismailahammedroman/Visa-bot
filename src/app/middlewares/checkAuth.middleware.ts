@@ -32,9 +32,8 @@ export const checkAuth =
         throw new AppError(httpStatus.UNAUTHORIZED, "Invalid or expired token");
       }
 
-      // ✅ Check user exists
+      // ✅ Fetch full user from DB
       const user = await User.findById(decoded.userId);
-
       if (!user) {
         throw new AppError(httpStatus.UNAUTHORIZED, "User not found");
       }
@@ -63,8 +62,8 @@ export const checkAuth =
         );
       }
 
-      // ✅ Attach user to request
-      req.user = decoded;
+      // ✅ Attach full user object to request
+      req.user = user; // ✅ full user, name included
 
       next();
     } catch (error) {

@@ -10,7 +10,7 @@ import { IVisaApplication } from "./visa.interface";
 const createVisaApplication = CatchAsync(
   async (req: Request, res: Response) => {
     const user = req.user as any; // better: custom payload type
-    const userId = user.userId; // ✅ correct key
+    const userId = user._id; // ✅ correct key
     // Multer uploaded files
     const files = req.files as Record<string, Express.MulterS3.File[]>;
 
@@ -51,7 +51,7 @@ const getAllVisaApplications = CatchAsync(
 
 const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
-  const userId = user.userId;
+  const userId = user._id;
   const visaApplicationId = req.params.id;
 
   const result = await VisaApplicationService.payVisaApplication(

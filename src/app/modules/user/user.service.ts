@@ -51,10 +51,15 @@ const updateUser = async (
   }
 
   // If file uploaded, update profile picture URL
+
+
+
   if (file) {
     update.profile_picture = file.location; // S3 public URL
   }
-
+  if (file) {
+    update.coverPicture = file.location; // S3 public URL
+  }
   const updatedUser = await userRepository.updateUser(userId, update);
 
   return updatedUser;

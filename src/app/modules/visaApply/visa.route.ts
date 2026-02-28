@@ -12,13 +12,13 @@ const router = express.Router();
 // -------------------- USER --------------------
 router.post(
   "/apply/:visaServiceId",
+  checkAuth(Role.USER, Role.ADMIN),
   uploadToS3.fields([
     { name: "passportCopy", maxCount: 1 },
     { name: "passportPhoto", maxCount: 1 },
     { name: "oldVisaCopy", maxCount: 1 },
     { name: "bankStatement", maxCount: 1 },
   ]),
-  checkAuth(Role.USER, Role.ADMIN),
   validateRequest(createVisaApplicationZodSchema),
   VisaApplicationController.createVisaApplication,
 );
