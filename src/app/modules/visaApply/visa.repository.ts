@@ -12,6 +12,7 @@ const findAll = () => VisaApplicationModel.find();
 const updateById = (id: string, payload: Partial<IVisaApplication>) =>
   VisaApplicationModel.findByIdAndUpdate(id, payload, { new: true });
 
+
 const deleteById = (id: string) => VisaApplicationModel.findByIdAndDelete(id);
 
 export const VisaApplicationRepository = {

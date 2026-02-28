@@ -29,8 +29,8 @@ router.get(
   VisaApplicationController.getAllVisaApplications,
 );
 
-// // optional payment endpoint (user)
-// router.post("/:id/pay", checkAuth(Role.USER), VisaApplicationController.pay);
+// optional payment endpoint (user)
+router.post("/:id/pay", checkAuth(Role.USER,Role.ADMIN), VisaApplicationController.payVisaApplication);
 
 // // -------------------- MANAGER / MAIN_MANAGER --------------------
 // router.get(
