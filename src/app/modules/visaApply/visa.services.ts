@@ -2,13 +2,14 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
 import {
+
   IVisaApplication,
   PaymentStatus,
 } from "./visa.interface";
 import { VisaApplicationRepository } from "./visa.repository";
 import { stripe } from "../../config/stripe";
 import { VisaServiceRepository } from "../visaService/visaService.repository";
-
+import { QueryBuilder } from "../../utils/queryBuilder";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
   const visaService = await VisaServiceRepository.findById(
@@ -51,6 +52,23 @@ const payVisaApplication = async (id: string, userId: string) => {
   return { clientSecret: paymentIntent.client_secret };
 };
 
+const getAllForManager = async (queryParams: any) => {
+  const query = new QueryBuilder(
+    VisaApplicationRepository.findAll()
+      .populate("user")
+      .populate("visaService"),
+    queryParams,
+  )
+    .search(["status"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await query.build();
+
+  return result;
+};
 
 
 
@@ -58,6 +76,7 @@ export const VisaApplicationService = {
   createVisaApplication,
   getAllVisaApplications,
   payVisaApplication,
+  getAllForManager,
 
 
 };

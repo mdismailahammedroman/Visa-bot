@@ -69,6 +69,19 @@ const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
 
 
 
+// 🔹 Get All (Manager)
+ const getAllForManager = CatchAsync(async (req: Request, res: Response) => {
+  const result = await VisaApplicationService.getAllForManager(req.query);
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Visa applications retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
 
 
 export const VisaApplicationController = {
@@ -78,6 +91,7 @@ export const VisaApplicationController = {
   payVisaApplication,
 
   // manager controllers:
+  getAllForManager,
 
 
 };
