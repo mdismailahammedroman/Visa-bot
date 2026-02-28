@@ -1,144 +1,139 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { v4 as uuidv4 } from "uuid";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { CatchAsync } from "../../utils/CatchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import { VisaApplicationService } from "./visa.services";
+import { IVisaApplication } from "./visa.interface";
 
-const apply = CatchAsync(async (req: Request, res: Response) => {
+const createVisaApplication = CatchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as any; // better: custom payload type
+    const userId = user._id; // ✅ correct key
+    // Multer uploaded files
+    const files = req.files as Record<string, Express.MulterS3.File[]>;
+
+    const payload: IVisaApplication = {
+      ...req.body, // validated body
+      trackingId: `TRK-${(uuidv4().split("-")[0] ?? "").toUpperCase()}`,
+      userId,
+      visaServiceId: req.params.visaServiceId, // from route param
+      passportCopy: files.passportCopy?.[0]?.location,
+      passportPhoto: files.passportPhoto?.[0]?.location,
+      oldVisaCopy: files.oldVisaCopy?.[0]?.location,
+      bankStatement: files.bankStatement?.[0]?.location,
+    };
+
+    const result = await VisaApplicationService.createVisaApplication(payload);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.CREATED,
+      success: true,
+      message: "Visa application created successfully",
+      data: result,
+    });
+  },
+);
+
+// Get all Visa Applications (for admin)
+const getAllVisaApplications = CatchAsync(
+  async (req: Request, res: Response) => {
+    const result = await VisaApplicationService.getAllVisaApplications();
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Visa applications fetched successfully",
+      data: result,
+    });
+  },
+);
+
+const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
-  const { visaServiceId } = req.params;
+  const userId = user._id;
+  const visaApplicationId = req.params.id;
 
-  const result = await VisaApplicationService.applyVisaService(
-    user.userId,
-    visaServiceId as string,
+  const result = await VisaApplicationService.payVisaApplication(
+    visaApplicationId as string,
+    userId,
   );
 
-  return sendResponse(res, {
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
     success: true,
-    statusCode: StatusCodes.CREATED,
-    message: "Visa application draft created",
+    message: "Payment completed successfully",
     data: result,
   });
 });
 
-const updateDraft = CatchAsync(async (req: Request, res: Response) => {
-  const user = req.user as any;
 
-  const result = await VisaApplicationService.updateApplicationDraft(
-    user.userId,
-    req.params.id as string,
-    req.body,
-  );
+
+// 🔹 Get All (Manager)
+ const getAllForManager = CatchAsync(async (req: Request, res: Response) => {
+  const result = await VisaApplicationService.getAllForManager(req.query);
 
   return sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "Draft updated",
-    data: result,
-  });
-});
-
-const submit = CatchAsync(async (req: Request, res: Response) => {
-  const user = req.user as any;
-
-  const result = await VisaApplicationService.submitApplication(
-    user.userId,
-    req.params.id as string,
-  );
-
-  return sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Application submitted",
-    data: result,
-  });
-});
-
-const pay = CatchAsync(async (req: Request, res: Response) => {
-  const user = req.user as any;
-
-  const result = await VisaApplicationService.markAsPaid(
-    user.userId,
-    req.params.id as string,
-  );
-
-  return sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Payment marked as paid",
-    data: result,
-  });
-});
-
-const myApplications = CatchAsync(async (req: Request, res: Response) => {
-  const user = req.user as any;
-
-  const result = await VisaApplicationService.getMyApplications(user.userId);
-
-  return sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "My applications",
-    data: result,
-  });
-});
-
-const getAllForManager = CatchAsync(async (req: Request, res: Response) => {
-  const result = await VisaApplicationService.getAllApplicationsForManager(
-    req.query,
-  );
-
-  return sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "All applications fetched",
+    message: "Visa applications retrieved successfully",
     data: result.data,
     meta: result.meta,
   });
 });
 
-const getOneForManager = CatchAsync(async (req: Request, res: Response) => {
-  const result = await VisaApplicationService.getApplicationByIdForManager(
-    req.params.id as string,
-  );
+
+// 🔹 Get One (Manager)
+ const getOneForManager = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const result = await VisaApplicationService.getOneForManager(id as string);
 
   return sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "Application fetched",
+    message: "Visa application retrieved successfully",
     data: result,
   });
 });
 
-const updateStatus = CatchAsync(async (req: Request, res: Response) => {
-  const manager = req.user as any;
-  const { status } = req.body; // "Processing" | "Approved" | "Rejected"
 
-  const result = await VisaApplicationService.updateApplicationStatus(
-    manager,
-    req.params.id as string,
-    status,
-  );
+// 🔹 Update Status (Manager)
+ const updateStatus = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const result = await VisaApplicationService.updateStatus(id as string, status);
 
   return sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: `Application status updated to ${status}`,
+    message: "Visa application status updated successfully",
     data: result,
   });
 });
+
+const deleteVisaApplication=CatchAsync(async(req:Request, res:Response)=>{
+  const { id } = req.params;
+    const result = await VisaApplicationService.deleteVisaApplication(id as string);
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Visa application deleted successfully",
+    data: result,
+  });
+})
 
 export const VisaApplicationController = {
   // user controllers:
-  apply,
-  updateDraft,
-  submit,
-  pay,
-  myApplications,
+  createVisaApplication,
+  getAllVisaApplications,
+  payVisaApplication,
 
   // manager controllers:
   getAllForManager,
   getOneForManager,
   updateStatus,
+  deleteVisaApplication
 };

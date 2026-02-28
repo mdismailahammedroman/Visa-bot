@@ -4,6 +4,7 @@ import { CountryRepository } from "../country/country.repository";
 import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
+import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
 
 /// Helper function to normalize and validate slugs
 const normalizeSlug = (value: string): string => {
@@ -13,6 +14,14 @@ const normalizeSlug = (value: string): string => {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+};
+const normalizeEnum = (val: string, enumObj: any) => {
+  if (!val) return val;
+  const upperVal = val.toString().toUpperCase().replace(/ /g, "_");
+  if (!Object.values(enumObj).includes(upperVal)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, `Invalid enum value: ${val}`);
+  }
+  return upperVal;
 };
 
 const createVisaServiceForCountry = async (countryId: string, payload: any) => {
@@ -29,7 +38,6 @@ const createVisaServiceForCountry = async (countryId: string, payload: any) => {
         "serviceName is required to generate slug",
       );
     }
-
     payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
       payload.serviceName,
     )}`;
@@ -37,12 +45,21 @@ const createVisaServiceForCountry = async (countryId: string, payload: any) => {
     payload.slug = normalizeSlug(payload.slug);
   }
 
+  // ✅ Correctly normalize enums
   if (payload.visaCategories) {
-    payload.visaCategories = payload.visaCategories.toString().toLowerCase();
+    payload.visaCategories = normalizeEnum(
+      payload.visaCategories,
+      VisaCategoryEnum,
+    );
   }
 
   if (payload.visaType) {
-    payload.visaType = payload.visaType.toString().toLowerCase();
+    payload.visaType = normalizeEnum(payload.visaType, VisaTypeEnum);
+  }
+
+  // Calculate total fee
+  if (payload.visaFee !== undefined && payload.serviceFee !== undefined) {
+    payload.totalFee = payload.visaFee + payload.serviceFee;
   }
 
   // ✅ Check duplicate inside SAME country
@@ -89,6 +106,16 @@ const updateVisaService = async (id: string, payload: any) => {
   return await VisaServiceRepository.updateById(id, payload);
 };
 
+const updateStatus = async (id: string, isActive: boolean) => {
+  const service = await VisaServiceRepository.findById(id);
+  if (!service)
+    throw new AppError(StatusCodes.NOT_FOUND, "VisaService not found");
+
+  service.isActive = isActive;
+  await service.save();
+  return service;
+};
+
 const getVisaServicesByCountry = async (
   countryId: string,
   queryParams: QueryParams = {},
@@ -129,24 +156,27 @@ const getAllVisaServices = async (queryParams: QueryParams = {}) => {
   return await VisaServiceRepository.findAllVisaServices(queryParams);
 };
 
-const searchVisaServices = async (countryId: string, queryParams: QueryParams = {}) => {
-    const baseQuery = VisaServiceRepository.findByCountry(countryId);
-    const qb = new QueryBuilder(baseQuery, queryParams)
-      .search(["serviceName", "slug", "visaCategories", "visaType"])
-      .filter()
-      .sort()
-      .paginate()
-      .fields();
-    const result = await qb.build();
-    return result;
+const searchVisaServices = async (
+  countryId: string,
+  queryParams: QueryParams = {},
+) => {
+  const baseQuery = VisaServiceRepository.findByCountry(countryId);
+  const qb = new QueryBuilder(baseQuery, queryParams)
+    .search(["serviceName", "slug", "visaCategories", "visaType"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+  const result = await qb.build();
+  return result;
 };
-
 
 export const VisaServiceService = {
   createVisaServiceForCountry,
   getVisaServicesByCountry,
   getVisaServiceById,
   updateVisaService,
+  updateStatus,
   deleteVisaService,
   getAllVisaServices,
   searchVisaServices,

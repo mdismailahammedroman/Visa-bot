@@ -130,11 +130,31 @@ const getAllVisaServicesController = CatchAsync(
     });
   });
 
+
+const updateStatus = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { isActive } = req.body; // true বা false পাঠাবে
+
+  if (typeof isActive !== "boolean") {
+    throw new AppError(StatusCodes.BAD_REQUEST, "isActive must be boolean");
+  }
+
+  const updatedService = await VisaServiceService.updateStatus(id as string, isActive);
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: `VisaService status updated to ${isActive ? "Active" : "Inactive"}`,
+    data: updatedService,
+  });
+});
+  
 export const VisaServiceController = {
   createForCountry,
   getByCountry,
   getOne,
   update,
+  updateStatus,
   delete: deleteService,
   searchVisaServicesController,
   getAllVisaServicesController,

@@ -1,26 +1,27 @@
+// visaService.interface.ts
 import { Types } from "mongoose";
 
-// ✅ Enums for Visa Category & Visa Type
+// ✅ Visa Category & Visa Type enums
 export enum VisaCategoryEnum {
-  TOURIST = "Tourist",
-  BUSINESS = "Business",
-  STUDENT = "Student",
-  WORK = "Work",
-  INVESTOR = "Investor",
-  MEDICAL = "Medical",
-  DIPLOMATIC = "Diplomatic",
-  OTHER = "Other",
+  TOURIST = "TOURIST",
+  BUSINESS = "BUSINESS",
+  STUDENT = "STUDENT",
+  WORK = "WORK",
+  INVESTOR = "INVESTOR",
+  MEDICAL = "MEDICAL",
+  DIPLOMATIC = "DIPLOMATIC",
+  OTHER = "OTHER",
 }
 
 export enum VisaTypeEnum {
-  VISA_FREE = "Visa-Free",
-  VISA_ON_ARRIVAL = "Visa on Arrival",
-  E_VISA = "eVisa",
-  EMBASSY_REQUIRED = "Embassy Required",
-  RESTRICTED = "Restricted",
+  VISA_FREE = "VISA_FREE",
+  VISA_ON_ARRIVAL = "VISA_ON_ARRIVAL",
+  E_VISA = "E_VISA",
+  EMBASSY_REQUIRED = "EMBASSY_REQUIRED",
+  RESTRICTED = "RESTRICTED",
 }
 
-// ✅ Visa Service Interface (plain structure)
+// ✅ Visa Service Interface
 export interface IVisaService {
   countryId: Types.ObjectId;
   serviceName: string;
@@ -36,7 +37,11 @@ export interface IVisaService {
   eligibleFor?: string[];
   requirements?: string[];
   processingTimeDays?: number;
-  fees?: number;
+
+  visaFee?: number;
+  serviceFee?: number;
+  totalFee?: number;
+
   multipleEntries?: boolean;
   notes?: string;
 

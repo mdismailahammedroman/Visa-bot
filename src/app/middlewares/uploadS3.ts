@@ -9,11 +9,14 @@ import { s3 } from "../config/aws-s3.config";
 export const uploadSingle = (fieldName: string) =>
   multer({
     storage: multerS3({
-      s3: s3 as any, // TS workaround for v3
+      s3: s3 as any,
       bucket: envVar.AWS_S3.AWS_BUCKET_NAME,
-   
       key: (req, file, cb) => {
-        const fileName = `users/${Date.now()}-${file.originalname}`;
+        const user = req.user as any;
+        const userName = user?.name || "unknown"; // full user name available
+
+        const timestamp = Date.now();
+        const fileName = `users/${userName}/profile/${timestamp}-${file.originalname}`;
         cb(null, fileName);
       },
     }),
@@ -24,10 +27,13 @@ export const uploadToS3 = multer({
   storage: multerS3({
     s3: s3 as any,
     bucket: envVar.AWS_S3.AWS_BUCKET_NAME,
- 
+
     key: (req, file, cb) => {
+      const user = req.user as any;
+      const userName = user?.name || "unknown"; // full user name available
+
       const ext = file.originalname.split(".").pop();
-      cb(null, `visa-docs/${file.fieldname}-${Date.now()}.${ext}`);
+      cb(null, `visa-docs/${userName}-${Date.now()}.${ext}`);
     },
   }),
   fileFilter: (
@@ -45,4 +51,3 @@ export const uploadToS3 = multer({
     }
   },
 });
-

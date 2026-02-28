@@ -3,10 +3,10 @@ import {
   GENDER_TYPE,
   IAuthProvider,
   IUser,
-  PaymentStatus,
+
   Role,
   UserStatus,
-  VisaStatus,
+
 } from "./user.interface";
 
 /* ---------------- Auth Provider Sub Schema ---------------- */
@@ -56,16 +56,8 @@ const userSchema = new Schema<IUser>(
     coverPicture: { type: String, default: "" },
     mobile: { type: String, default: "" },
     location: { type: String, default: "" },
-    visaStatus: {
-      type: String,
-      enum: Object.values(VisaStatus),
-      default: VisaStatus.PENDING,
-    },
-    paymentStatus: {
-      type: String,
-      enum: Object.values(PaymentStatus),
-      default: PaymentStatus.UNPAID,
-    },
+
+
     coordinate: {
       type: { type: String, default: "Point" },
       coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]

@@ -65,6 +65,14 @@ router.patch(
   validateRequest(updateVisaServiceZodSchema),
   VisaServiceController.update,
 );
+/**
+ * Update Status
+ */
+router.patch(
+  "/:id/status",
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
+  VisaServiceController.updateStatus,
+);
 
 
 /**
@@ -75,5 +83,7 @@ router.get(
   checkAuth(...Object.values(Role)),
   VisaServiceController.searchVisaServicesController
 );
+
+
 
 export const visaServiceRouter = router;

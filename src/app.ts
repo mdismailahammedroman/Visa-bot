@@ -9,12 +9,19 @@ import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import { envVar } from "./app/config/EnvVar";
 import { router } from "./app/routes";
 import passport from "./app/config/passport.config";
+import { visaPaymentController } from "./app/modules/visaPayment/visaPayment.controller";
 
 const app: Application = express();
 
 app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+app.post(
+  "/api/v1/apply-visa/webhook",
+  express.raw({ type: "application/json" }),
+  visaPaymentController.stripeWebhookHandler,
+);
 
 // recommended: set real origins later (not true)
 app.use(

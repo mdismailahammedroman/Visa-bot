@@ -51,10 +51,15 @@ const updateUser = async (
   }
 
   // If file uploaded, update profile picture URL
+
+
+
   if (file) {
     update.profile_picture = file.location; // S3 public URL
   }
-
+  if (file) {
+    update.coverPicture = file.location; // S3 public URL
+  }
   const updatedUser = await userRepository.updateUser(userId, update);
 
   return updatedUser;
@@ -111,8 +116,6 @@ const getUserProfileForAdmin = async (userId: string) => {
     status: user.status,
     role: user.role,
 
-    visaStatus: user.visaStatus,
-    paymentStatus: user.paymentStatus,
 
     memberSince: user.createdAt,
     lastLogin: user.lastLoginAt,

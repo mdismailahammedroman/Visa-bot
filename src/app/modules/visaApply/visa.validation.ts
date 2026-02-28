@@ -1,70 +1,57 @@
-// src/modules/visa/visa.validation.ts
 import { z } from "zod";
+import { GENDER_TYPE } from "../user/user.interface";
 
-export const createDraftSchema = z.object({
-  body: z.object({}).optional(),
-});
-
-export const stepCountryDestinationSchema = z.object({
+export const createVisaApplicationZodSchema = z.object({
   body: z.object({
     countryId: z.string().min(1),
-    destinationId: z.string().min(1),
-  }),
-});
-
-export const stepServiceVisaSchema = z.object({
-  body: z.object({
-    serviceTypeId: z.string().min(1),
-    visaTypeId: z.string().min(1),
-  }),
-});
-
-export const stepFeeSchema = z.object({
-  body: z.object({
-    amount: z.number().min(0),
-    currency: z.enum(["BDT", "USD"]),
-    breakdown: z.record(z.string(), z.number()).optional(),
-  }),
-});
-
-export const stepPersonalSchema = z.object({
-  body: z.object({
     fullName: z.string().min(2),
-    gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-    dateOfBirth: z.string().optional(),
-    passportNumber: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.string().email().optional(),
-    address: z.string().optional(),
-  }),
-});
-
-export const stepFinancialSchema = z.object({
-  body: z.object({
+    email: z.string().email(),
+    phoneNumber: z.string().min(10),
+    birthDate: z.string().min(10),
+    passportNumber: z.string().min(6),
+    gender: z.enum(Object.values(GENDER_TYPE)),
     incomeSource: z.enum([
-      "Self funded trip",
-      "Friend or family",
-      "Employee business travel",
+      "Self Funded",
+      "Friend or Family",
+      "Employee Business Travel",
     ]),
-    monthlyIncome: z.number().min(0).optional(),
+    monthlyIncome: z.coerce.number().min(0), // coerce string -> number
     bankName: z.string().min(2),
-    accountNumber: z.string().min(6),
-    bankStatement: z.string().url(),
+    accountNumber: z.string().optional(),
+    visaFee: z.coerce.number().optional(),
+    serviceFee: z.coerce.number().optional(),
+    totalFee: z.coerce.number().optional(),
+    paymentStatus: z.enum(["Unpaid", "Paid", "Refunded"]).optional(),
+    status: z
+      .enum(["Draft", "Pending", "Processing", "Approved", "Rejected"])
+      .optional(),
   }),
 });
 
-export const stepTravelSchema = z.object({
+export const updateVisaApplicationZodSchema = z.object({
   body: z.object({
-    travelMode: z.enum([
-      "SELF",
-      "FRIEND_FAMILY",
-      "EMPLOYEE",
-      "BUSINESS_TRAVEL",
-    ]),
-    note: z.string().optional(),
+    fullName: z.string().min(2).optional(),
+    email: z.string().email().optional(),
+    phoneNumber: z.string().min(10).optional(),
+    birthDate: z.string().min(10).optional(),
+    passportNumber: z.string().min(6).optional(),
+    gender: z.enum(Object.values(GENDER_TYPE)).optional(),
+    incomeSource: z
+      .enum(["Self Funded", "Friend or Family", "Employee Business Travel"])
+      .optional(),
+    monthlyIncome: z.number().min(0).optional(),
+    bankName: z.string().min(2).optional(),
+    accountNumber: z.string().min(6).optional(),
+    bankStatement: z.string().optional(),
+    passportCopy: z.string().min(1).optional(),
+    passportPhoto: z.string().min(1).optional(),
+    oldVisaCopy: z.string().min(1).optional(),
+    visaFee: z.number().optional(),
+    serviceFee: z.number().optional(),
+    totalFee: z.number().optional(),
+    paymentStatus: z.enum(["Unpaid", "Paid", "Refunded"]).optional(),
+    status: z
+      .enum(["Draft", "Pending", "Processing", "Approved", "Rejected"])
+      .optional(),
   }),
-});
-
-export const submitSchema = z.object({
-  body: z.object({}).optional(),
 });

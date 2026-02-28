@@ -8,6 +8,12 @@ interface REDIS_TYPE {
   REDIS_PASSWORD: string;
 }
 
+interface STRIPE_TYPE {
+  STRIPE_SECRET_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
+  STRIPE_CURRENCY: string;
+}
+
 interface SMTP_TYPE {
   SMTP_HOST: string;
   SMTP_PORT: string;
@@ -39,6 +45,7 @@ interface EnvVar {
   AWS_S3: AWS_S3_type;
   SMTP: SMTP_TYPE;
   FIXER_API_KEY: string;
+  STRIPE: STRIPE_TYPE;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -70,6 +77,10 @@ const loadEnvVariables = (): EnvVar => {
     "SMTP_FROM_EMAIL",
     "SMTP_FROM_NAME",
     "FIXER_API_KEY",
+
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_CURRENCY",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -110,6 +121,11 @@ const loadEnvVariables = (): EnvVar => {
       SMTP_FROM_NAME: process.env.SMTP_FROM_NAME as string,
     },
     FIXER_API_KEY: process.env.FIXER_API_KEY as string,
+    STRIPE: {
+      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
+      STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
+      STRIPE_CURRENCY: process.env.STRIPE_CURRENCY as string,
+    },
   };
 };
 

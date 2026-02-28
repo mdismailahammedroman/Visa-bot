@@ -22,19 +22,24 @@ const registerUser = CatchAsync(
 );
 
 const updateUser = CatchAsync(async (req: Request, res: Response) => {
-  const user = req.user as any; // better: custom payload type
-  const userId = user.userId; // ✅ correct key
+  const user = req.user as any;
 
 
-
-  const allowedFields = ["name", "profile_picture", "coverPicture", "mobile", "location", "gender"] as const;
+  const allowedFields = [
+    "name",
+    "profile_picture",
+    "coverPicture",
+    "mobile",
+    "location",
+    "gender",
+  ] as const;
   const update: Partial<TUpdateUserProfile> = {};
 
   for (const key of allowedFields) {
     if (req.body[key] !== undefined) update[key] = req.body[key];
   }
 
-  const result = await userService.updateUser(userId, update, req.file as any);
+  const result = await userService.updateUser(user, update, req.file as any);
 
   sendResponse(res, {
     success: true,
@@ -48,7 +53,7 @@ const updateUser = CatchAsync(async (req: Request, res: Response) => {
 
 const getByMySelf = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
-  const userId = user.userId;
+  const userId = user._id;
   const result = await userService.getByMySelf(userId);
 
   // Optional: password is already hidden by schema
