@@ -23,9 +23,7 @@ const createVisaApplication = CatchAsync(
       passportPhoto: files.passportPhoto?.[0]?.location,
       oldVisaCopy: files.oldVisaCopy?.[0]?.location,
       bankStatement: files.bankStatement?.[0]?.location,
-      
     };
-
 
     const result = await VisaApplicationService.createVisaApplication(payload);
 
@@ -51,28 +49,30 @@ const getAllVisaApplications = CatchAsync(
   },
 );
 
+const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  const userId = user.userId;
+  const visaApplicationId = req.params.id;
 
-const payVisaApplication = CatchAsync(
-  async (req: Request, res: Response) => {
-    const user = req.user as any;
-    const userId = user.userId;
-    const { id } = req.params;
+  const result = await VisaApplicationService.payVisaApplication(
+    visaApplicationId as string,
+    userId,
+  );
 
-    const result = await VisaApplicationService.payVisaApplication(id as string, userId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Payment completed successfully",
+    data: result,
+  });
+});
 
-    sendResponse(res, {
-      statusCode: StatusCodes.OK,
-      success: true,
-      message: "Payment completed successfully",
-      data: result,
-    });
-  }
-);
 export const VisaApplicationController = {
   // user controllers:
   createVisaApplication,
   getAllVisaApplications,
   payVisaApplication,
+
   // manager controllers:
   // getAllForManager,
   // getOneForManager,

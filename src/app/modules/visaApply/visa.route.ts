@@ -18,7 +18,7 @@ router.post(
     { name: "oldVisaCopy", maxCount: 1 },
     { name: "bankStatement", maxCount: 1 },
   ]),
-  checkAuth(Role.USER),
+  checkAuth(Role.USER, Role.ADMIN),
   validateRequest(createVisaApplicationZodSchema),
   VisaApplicationController.createVisaApplication,
 );
@@ -30,7 +30,11 @@ router.get(
 );
 
 // optional payment endpoint (user)
-router.post("/:id/pay", checkAuth(Role.USER,Role.ADMIN), VisaApplicationController.payVisaApplication);
+router.post(
+  "/:id/pay",
+  checkAuth(Role.USER, Role.ADMIN),
+  VisaApplicationController.payVisaApplication,
+);
 
 // // -------------------- MANAGER / MAIN_MANAGER --------------------
 // router.get(
