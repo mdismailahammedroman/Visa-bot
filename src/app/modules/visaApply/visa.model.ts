@@ -45,9 +45,11 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
     passportCopy: { type: String },
     passportPhoto: { type: String },
     oldVisaCopy: { type: String },
-    visaFee: { type: Number, default: 0 },
-    serviceFee: { type: Number, default: 0 },
-    totalFee: { type: Number, default: 0 },
+
+    visaFee: { type: Number },
+    serviceFee: { type: Number },
+    totalFee: { type: Number },
+
     paymentStatus: {
       type: String,
       enum: Object.values(PaymentStatus),

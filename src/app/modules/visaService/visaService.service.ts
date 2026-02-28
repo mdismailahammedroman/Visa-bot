@@ -4,6 +4,7 @@ import { CountryRepository } from "../country/country.repository";
 import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
+import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
 
 /// Helper function to normalize and validate slugs
 const normalizeSlug = (value: string): string => {
@@ -13,6 +14,14 @@ const normalizeSlug = (value: string): string => {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+};
+const normalizeEnum = (val: string, enumObj: any) => {
+  if (!val) return val;
+  const upperVal = val.toString().toUpperCase().replace(/ /g, "_");
+  if (!Object.values(enumObj).includes(upperVal)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, `Invalid enum value: ${val}`);
+  }
+  return upperVal;
 };
 
 const createVisaServiceForCountry = async (countryId: string, payload: any) => {
@@ -26,35 +35,40 @@ const createVisaServiceForCountry = async (countryId: string, payload: any) => {
     if (!payload.serviceName) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
-        "serviceName is required to generate slug",
+        "serviceName is required to generate slug"
       );
     }
-
     payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
-      payload.serviceName,
+      payload.serviceName
     )}`;
   } else {
     payload.slug = normalizeSlug(payload.slug);
   }
 
+  // ✅ Correctly normalize enums
   if (payload.visaCategories) {
-    payload.visaCategories = payload.visaCategories.toString().toLowerCase();
+    payload.visaCategories = normalizeEnum(payload.visaCategories, VisaCategoryEnum);
   }
 
   if (payload.visaType) {
-    payload.visaType = payload.visaType.toString().toLowerCase();
+    payload.visaType = normalizeEnum(payload.visaType, VisaTypeEnum);
+  }
+
+  // Calculate total fee
+  if (payload.visaFee !== undefined && payload.serviceFee !== undefined) {
+    payload.totalFee = payload.visaFee + payload.serviceFee;
   }
 
   // ✅ Check duplicate inside SAME country
   const existing = await VisaServiceRepository.findBySlugAndCountry(
     payload.slug,
-    countryId,
+    countryId
   );
 
   if (existing) {
     throw new AppError(
       StatusCodes.CONFLICT,
-      "This slug already exists in this country",
+      "This slug already exists in this country"
     );
   }
 
@@ -62,7 +76,7 @@ const createVisaServiceForCountry = async (countryId: string, payload: any) => {
     ...payload,
     countryId,
   });
-};
+}
 
 const updateVisaService = async (id: string, payload: any) => {
   const existing = await VisaServiceRepository.findById(id);

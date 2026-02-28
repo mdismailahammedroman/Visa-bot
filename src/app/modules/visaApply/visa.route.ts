@@ -55,4 +55,5 @@ router.post(
 //   VisaApplicationController.updateStatus,
 // );
 
+
 export const visaApplicationRoute = router;

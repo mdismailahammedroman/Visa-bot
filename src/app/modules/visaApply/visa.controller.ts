@@ -67,6 +67,10 @@ const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+
+
 export const VisaApplicationController = {
   // user controllers:
   createVisaApplication,
@@ -74,7 +78,6 @@ export const VisaApplicationController = {
   payVisaApplication,
 
   // manager controllers:
-  // getAllForManager,
-  // getOneForManager,
-  // updateStatus,
+
+
 };
