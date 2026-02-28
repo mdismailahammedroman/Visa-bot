@@ -37,23 +37,23 @@ router.post(
 );
 
 // // -------------------- MANAGER / MAIN_MANAGER --------------------
-// router.get(
-//   "/",
-//   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-//   VisaApplicationController.getAllForManager,
-// );
+router.get(
+  "/",
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+  VisaApplicationController.getAllForManager,
+);
 
-// router.get(
-//   "/:id/admin",
-//   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-//   VisaApplicationController.getOneForManager,
-// );
+router.get(
+  "/:id/admin",
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+  VisaApplicationController.getOneForManager,
+);
 
-// router.patch(
-//   "/:id/status",
-//   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-//   VisaApplicationController.updateStatus,
-// );
+router.patch(
+  "/:id/status",
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+  VisaApplicationController.updateStatus,
+);
 router.patch(
   "/:id/status",
   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
