@@ -64,8 +64,9 @@ const payVisaApplication = async (id: string, userId: string) => {
 const getAllForManager = async (queryParams: any) => {
   const query = new QueryBuilder(
     VisaApplicationRepository.findAll()
-      .populate("user")
-      .populate("visaService"),
+      .populate("userId")
+      .populate("visaServiceId")
+      .populate("countryId"),
     queryParams,
   )
     .search(["status"])
@@ -77,7 +78,7 @@ const getAllForManager = async (queryParams: any) => {
   const result = await query.build();
 
   return result;
-};
+}; 
 
 const getOneForManager = async (id: string) => {
   const result = await VisaApplicationRepository.findById(id);
@@ -105,10 +106,9 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
 };
 
 const deleteVisaApplication = async (id: string) => {
-  const deleted = await VisaServiceRepository.deleteById(id);
-  if (deleted) {
+  const deleted = await VisaApplicationRepository.deleteById(id);
+  if (!deleted)
     throw new AppError(StatusCodes.NOT_FOUND, "visa application not found");
-  }
   return deleted;
 };
 

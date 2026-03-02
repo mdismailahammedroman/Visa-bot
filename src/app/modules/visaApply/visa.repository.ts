@@ -26,6 +26,7 @@ const findActiveApplication = async (
   });
 };
 
+const deleteById = (id: string) => VisaApplicationModel.findByIdAndDelete(id);
 export const VisaApplicationRepository = {
   create,
   findById,
@@ -33,5 +34,5 @@ export const VisaApplicationRepository = {
   findAll,
   updateById,
   findActiveApplication,
-
+  deleteById,
 };

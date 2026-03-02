@@ -32,7 +32,6 @@ const createCountry = async (payload: ICountry) => {
     currencyRate,
   };
 
-  // ✅ Only add notes if defined
   if (payload.notes) {
     dataToCreate.notes = payload.notes;
   } else if (payload.currency) {
@@ -90,12 +89,10 @@ const getCountryById = async (id: string, liveRate?: boolean) => {
 
   return country;
 };
-          
+
 export const CountryService = {
   createCountry,
   getAllCountries,
   updateCountry,
   getCountryById,
 };
-
-

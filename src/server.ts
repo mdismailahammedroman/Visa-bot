@@ -8,6 +8,7 @@ import { connectRedis, disconnectRedis } from "./app/config/redis.config";
 
 const server = http.createServer(app);
 
+// 🔌 Socket.io setup
 const io = new SocketIoServer(server, {
   cors: {
     origin: envVar.FRONTEND_URL,
@@ -15,25 +16,14 @@ const io = new SocketIoServer(server, {
     credentials: true,
   },
 });
-
 setIo(io);
 
-io.on("connection", (socket) => {
-  console.log("✅ New Client connected:", socket.id);
-
-  socket.on("message", (data) => {
-    console.log("📩 Message received:", data);
-    socket.emit("message", `Hello from server: ${data}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("❌ Client disconnected:", socket.id);
-  });
-});
-
+// 🔑 Bootstrap server
 async function bootstrap() {
   await connectDB();
   await connectRedis();
+  // await seedSuperAdmin();
+
   server.listen(envVar.PORT, () =>
     console.log(`🚀 Server running on port ${envVar.PORT}`),
   );

@@ -45,7 +45,7 @@ router.get(
 
 router.patch(
   "/:id/status",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER, Role.ADMIN),
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
   VisaApplicationController.updateStatus,
 );
 router.delete(
