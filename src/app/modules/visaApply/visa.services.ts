@@ -40,10 +40,6 @@ const createVisaApplication = async (payload: IVisaApplication) => {
   return await VisaApplicationRepository.create(payload);
 };
 
-const getAllVisaApplications = async () => {
-  return await VisaApplicationRepository.findAll();
-};
-
 const payVisaApplication = async (id: string, userId: string) => {
   const application = await VisaApplicationRepository.findById(id);
 
@@ -94,9 +90,8 @@ const getOneForManager = async (id: string) => {
 };
 
 const updateStatus = async (id: string, status: ApplicationStatus) => {
-  const allowedStatuses = ["PENDING", "PROCESSING", "APPROVED", "REJECTED"];
-
-  if (!allowedStatuses.includes(status)) {
+  // optional runtime validation
+  if (!Object.values(ApplicationStatus).includes(status)) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status value");
   }
 
@@ -119,7 +114,6 @@ const deleteVisaApplication = async (id: string) => {
 
 export const VisaApplicationService = {
   createVisaApplication,
-  getAllVisaApplications,
   payVisaApplication,
   getAllForManager,
   getOneForManager,

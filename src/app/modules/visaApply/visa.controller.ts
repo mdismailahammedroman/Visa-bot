@@ -36,18 +36,6 @@ const createVisaApplication = CatchAsync(
   },
 );
 
-// Get all Visa Applications (for admin)
-const getAllVisaApplications = CatchAsync(
-  async (req: Request, res: Response) => {
-    const result = await VisaApplicationService.getAllVisaApplications();
-    sendResponse(res, {
-      statusCode: StatusCodes.OK,
-      success: true,
-      message: "Visa applications fetched successfully",
-      data: result,
-    });
-  },
-);
 
 const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
@@ -128,7 +116,6 @@ const deleteVisaApplication=CatchAsync(async(req:Request, res:Response)=>{
 export const VisaApplicationController = {
   // user controllers:
   createVisaApplication,
-  getAllVisaApplications,
   payVisaApplication,
 
   // manager controllers:

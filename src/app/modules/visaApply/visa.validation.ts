@@ -23,7 +23,7 @@ export const createVisaApplicationZodSchema = z.object({
     totalFee: z.coerce.number().optional(),
     paymentStatus: z.enum(["Unpaid", "Paid", "Refunded"]).optional(),
     status: z
-      .enum(["Draft", "Pending", "Processing", "Approved", "Rejected"])
+      .enum(["Pending", "Processing", "Approved", "Rejected"])
       .optional(),
   }),
 });
@@ -51,7 +51,7 @@ export const updateVisaApplicationZodSchema = z.object({
     totalFee: z.number().optional(),
     paymentStatus: z.enum(["Unpaid", "Paid", "Refunded"]).optional(),
     status: z
-      .enum(["Draft", "Pending", "Processing", "Approved", "Rejected"])
+      .enum(["Pending", "Processing", "Approved", "Rejected"])
       .optional(),
   }),
 });

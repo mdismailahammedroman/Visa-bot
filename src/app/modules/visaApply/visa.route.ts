@@ -23,12 +23,6 @@ router.post(
   VisaApplicationController.createVisaApplication,
 );
 
-router.get(
-  "/apply",
-  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER),
-  VisaApplicationController.getAllVisaApplications,
-);
-
 // optional payment endpoint (user)
 router.post(
   "/:id/pay",
@@ -44,19 +38,19 @@ router.get(
 );
 
 router.get(
-  "/:id/admin",
+  "/:id/application",
   checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
   VisaApplicationController.getOneForManager,
 );
 
 router.patch(
   "/:id/status",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER, Role.ADMIN),
   VisaApplicationController.updateStatus,
 );
-router.patch(
-  "/:id/status",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+router.delete(
+  "/:id/application",
+  checkAuth(Role.MANAGER, Role.MAIN_MANAGER, Role.ADMIN),
   VisaApplicationController.deleteVisaApplication,
 );
 
