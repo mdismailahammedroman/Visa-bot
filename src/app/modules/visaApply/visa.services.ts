@@ -12,13 +12,26 @@ import { VisaServiceRepository } from "../visaService/visaService.repository";
 import { QueryBuilder } from "../../utils/queryBuilder";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
-  const visaService = await VisaServiceRepository.findById(
+  const applyVisaServices = await VisaServiceRepository.findById(
     payload.visaServiceId.toString(),
   );
-  if (!visaService) throw new Error("Visa Service not found");
+  if (!applyVisaServices) throw new Error("Visa Service not found");
 
-  const visaFee = visaService.visaFee || 0;
-  const serviceFee = visaService.serviceFee || 0;
+  // 🔎 Check previous application for same user + service
+  const activeApplication =
+    await VisaApplicationRepository.findActiveApplication(
+      payload.userId.toString(),
+      payload.visaServiceId.toString(),
+    );
+
+  if (activeApplication) {
+    throw new Error(
+      "You already have a pending or processing visa application.",
+    );
+  }
+
+  const visaFee = applyVisaServices.visaFee || 0;
+  const serviceFee = applyVisaServices.serviceFee || 0;
 
   payload.visaFee = visaFee;
   payload.serviceFee = serviceFee;
@@ -96,13 +109,13 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
   return updated;
 };
 
-const deleteVisaApplication =async (id:string)=>{
-  const deleted =await VisaServiceRepository.deleteById(id);
+const deleteVisaApplication = async (id: string) => {
+  const deleted = await VisaServiceRepository.deleteById(id);
   if (deleted) {
     throw new AppError(StatusCodes.NOT_FOUND, "visa application not found");
   }
   return deleted;
-}
+};
 
 export const VisaApplicationService = {
   createVisaApplication,
