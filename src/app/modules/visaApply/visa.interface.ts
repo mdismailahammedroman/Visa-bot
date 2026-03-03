@@ -34,6 +34,7 @@ export interface IVisaApplication {
   trackingId: string;
 
   userId: Types.ObjectId;
+  fromCountryName?: string;
   visaServiceId: Types.ObjectId;
   countryId: Types.ObjectId;
 

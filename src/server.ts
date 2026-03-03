@@ -5,18 +5,20 @@ import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
 import { setIo } from "./app/config/socket";
 import { connectRedis, disconnectRedis } from "./app/config/redis.config";
+import { initSockets } from "./app/modules/socket/socket";
 
 const server = http.createServer(app);
 
-// 🔌 Socket.io setup
 const io = new SocketIoServer(server, {
   cors: {
     origin: envVar.FRONTEND_URL,
-    methods: ["GET", "POST"],
     credentials: true,
   },
 });
+
+// 🔥 IMPORTANT ORDER
 setIo(io);
+initSockets(io);
 
 // 🔑 Bootstrap server
 async function bootstrap() {

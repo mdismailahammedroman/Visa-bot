@@ -24,6 +24,8 @@ app.use(compression());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // 🏦 Rate Limiter (prevent abuse)
+app.set("trust proxy", 1);
+
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 // 🌐 CORS
@@ -54,14 +56,12 @@ app.get("/health/live", (_req: Request, res: Response) =>
   res.status(200).json({ success: true, message: "Alive ✅" }),
 );
 app.get("/health/ready", (_req: Request, res: Response) =>
-  res
-    .status(200)
-    .json({
-      success: true,
-      message: "Ready ✅",
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-    }),
+  res.status(200).json({
+    success: true,
+    message: "Ready ✅",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  }),
 );
 
 // 🔗 API routes

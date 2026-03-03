@@ -10,8 +10,8 @@ export const uploadSingle = (fieldName: string) =>
   multer({
     storage: multerS3({
       s3: s3 as any,
-      bucket: envVar.AWS_S3.AWS_BUCKET_NAME,
-      contentType:multerS3.AUTO_CONTENT_TYPE,
+      bucket: envVar.AWS.AWS_BUCKET_NAME,
+      contentType: multerS3.AUTO_CONTENT_TYPE,
       key: (req, file, cb) => {
         const user = req.user as any;
         const userName = user?.name || "unknown"; // full user name available
@@ -27,8 +27,8 @@ export const uploadSingle = (fieldName: string) =>
 export const uploadToS3 = multer({
   storage: multerS3({
     s3: s3 as any,
-    bucket: envVar.AWS_S3.AWS_BUCKET_NAME,
-      contentType: multerS3.AUTO_CONTENT_TYPE,
+    bucket: envVar.AWS.AWS_BUCKET_NAME,
+    contentType: multerS3.AUTO_CONTENT_TYPE,
 
     key: (req, file, cb) => {
       const user = req.user as any;

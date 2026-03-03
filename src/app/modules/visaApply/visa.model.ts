@@ -17,15 +17,19 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
       required: true,
       index: true,
     },
-    visaServiceId: {
-      type: Schema.Types.ObjectId,
-      ref: "VisaService",
-      required: true,
-      index: true,
+    fromCountryName: {
+      type: String,
+      trim: true,
     },
     countryId: {
       type: Schema.Types.ObjectId,
       ref: "Country",
+      required: true,
+      index: true,
+    },
+    visaServiceId: {
+      type: Schema.Types.ObjectId,
+      ref: "VisaService",
       required: true,
       index: true,
     },

@@ -49,7 +49,7 @@ router.patch(
   VisaApplicationController.updateStatus,
 );
 router.delete(
-  "/:id/application",
+  "/:id/application-delete",
   checkAuth(Role.MANAGER, Role.MAIN_MANAGER, Role.ADMIN),
   VisaApplicationController.deleteVisaApplication,
 );
