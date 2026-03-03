@@ -1,6 +1,8 @@
 import { NotificationRepository } from "./notification.repository";
 import { NotificationType } from "./notification.interface";
 import { Types } from "mongoose";
+import { userRepository } from "../user/user.repository";
+import { sendPushNotification } from "../../utils/sendPushNotification";
 
 const createNotification = async (
   userId: string,
@@ -21,6 +23,26 @@ const createNotification = async (
   });
 };
 
+const sendNotificationToUsers = async (
+  userIds: string[],
+  title: string,
+  message: string,
+  type: NotificationType
+) => {
+  const notifications = await Promise.all(
+    userIds.map(async (userId) => {
+      // Optional: fetch user's push tokens
+      const user = await userRepository.findById(userId);
+      const tokens = (user?.fcmTokens || []).map((t: string) => t.toString());
+      await sendPushNotification(tokens, title, message); // ✅ only 4 arguments
+      return await createNotification(userId, title, message, type);
+    })
+  );
+  return notifications;
+};
+
+
+
 const getMyNotifications = async (userId: string) => {
   return await NotificationRepository.findByUserId(userId);
 };
@@ -35,6 +57,7 @@ const markAllAsRead = async (userId: string) => {
 
 export const NotificationService = {
   createNotification,
+  sendNotificationToUsers,
   getMyNotifications,
   markOneAsRead,
   markAllAsRead,

@@ -1,10 +1,12 @@
 import { Types } from "mongoose";
 
 export enum NotificationType {
-  VISA_STATUS = "VISA_STATUS",
-  ASSIGNMENT = "ASSIGNMENT",
+  NEW_APPLICATION = "NEW_APPLICATION",
+  VISA_STATUS_UPDATED = "VISA_STATUS_UPDATED",
+  ASSIGNED = "ASSIGNED_APPLICATION",
   PAYMENT = "PAYMENT",
   SYSTEM = "SYSTEM",
+  OTHER_NOTIFICATION = "OTHER_NOTIFICATION",
 }
 
 export interface INotification {

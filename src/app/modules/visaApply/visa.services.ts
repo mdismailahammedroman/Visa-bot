@@ -13,6 +13,8 @@ import { QueryBuilder } from "../../utils/queryBuilder";
 import { Types } from "mongoose";
 import { userRepository } from "../user/user.repository";
 import { Role } from "../user/user.interface";
+import { NotificationService } from "../notification/notification.service";
+import { NotificationType } from "../notification/notification.interface";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
   const applyVisaServices = await VisaServiceRepository.findById(
@@ -40,7 +42,21 @@ const createVisaApplication = async (payload: IVisaApplication) => {
   payload.serviceFee = serviceFee;
   payload.totalFee = visaFee + serviceFee;
 
-  return await VisaApplicationRepository.create(payload);
+  const application = await VisaApplicationRepository.create(payload);
+
+  // 🔔 Send notification to all admins
+  const admins = await userRepository.findByRole(Role.ADMIN);
+  const adminIds = admins.map((a) => a._id.toString());
+  adminIds.forEach((adminId) => {
+    NotificationService.createNotification(
+      adminId,
+      "New Visa Application",
+      `A new application created by ${payload.fullName}`,
+      NotificationType.NEW_APPLICATION,
+    );
+  });
+
+  return application;
 };
 
 const updateApplication = async (
@@ -62,7 +78,7 @@ const getMyApplications = async (userId: string, queryParams: any) => {
       .populate("visaServiceId")
       .populate("countryId")
       .populate("assignedTo", "name email role"),
-    queryParams
+    queryParams,
   )
     .search(["status", "visaType"]) // search by status, visaType etc
     .filter()
@@ -130,11 +146,24 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status value");
   }
 
+  const application = await VisaApplicationRepository.findById(id);
+
+  if (!application) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
+  }
+
   const updated = await VisaApplicationRepository.updateById(id, { status });
 
   if (!updated) {
     throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
   }
+  // 🔔 Notify user
+  NotificationService.createNotification(
+    application.userId.toString(),
+    "Application Status Updated",
+    `Your visa application status is now "${status}"`,
+    NotificationType.VISA_STATUS_UPDATED,
+  );
 
   return updated;
 };
@@ -204,6 +233,14 @@ const assignApplication = async (
   ];
 
   await application.save();
+
+  // 🔔 Notify manager
+  NotificationService.createNotification(
+    managerId,
+    "New Assigned Application",
+    `You have been assigned a new application by ${assignedById}`,
+    NotificationType.ASSIGNED,
+  );
 
   return await VisaApplicationRepository.findByIdWithPopulate(applicationId);
 };

@@ -3,6 +3,7 @@ import { hashPassword } from "../../helpers/passwordHelper";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import {
   IUser,
+  Role,
   TCreateUserPayload,
   TUpdateUserProfile,
   UserStatus,
@@ -101,6 +102,10 @@ const findByIdWithPassword = (id: string) => {
   return User.findById(id).select("+password").exec();
 };
 
+const findByRole = (role: Role) => {
+  return User.find({ role }).lean().exec();
+};
+
 // export  userRepository
 
 export const userRepository = {
@@ -116,4 +121,5 @@ export const userRepository = {
   deleteUserById,
   invalidateToken,
   getAllUsersWithQuery,
+  findByRole,
 };

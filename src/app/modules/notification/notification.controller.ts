@@ -47,8 +47,36 @@ const markAllAsRead = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Admin route: send notification to users
+const sendNotificationToUsers = CatchAsync(async (req: Request, res: Response) => {
+  const { userIds, title, message, type } = req.body;
+
+  if (!userIds?.length || !title || !message || !type) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: StatusCodes.BAD_REQUEST,
+      message: "Missing required fields",
+    });
+  }
+
+  const result = await NotificationService.sendNotificationToUsers(
+    userIds,
+    title,
+    message,
+    type
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Notifications sent successfully",
+    data: result,
+  });
+});
+
 export const NotificationController = {
   getMyNotifications,
   markAsRead,
   markAllAsRead,
+  sendNotificationToUsers,
 };
