@@ -34,6 +34,32 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
       index: true,
     },
 
+    assignedTo: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+
+    assignmentHistory: [
+      {
+        assignedBy: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        assignedTo: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        assignedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
     fullName: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },
     phoneNumber: { type: String, trim: true },

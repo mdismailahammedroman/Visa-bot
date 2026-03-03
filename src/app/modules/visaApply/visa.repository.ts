@@ -27,6 +27,14 @@ const findActiveApplication = async (
 };
 
 const deleteById = (id: string) => VisaApplicationModel.findByIdAndDelete(id);
+
+
+const findByIdWithPopulate = (id: string) =>
+  VisaApplicationModel.findById(id)
+    .populate("assignedTo", "name email role")
+    .populate("assignmentHistory.assignedBy", "name email role")
+    .populate("assignmentHistory.assignedTo", "name email role");
+
 export const VisaApplicationRepository = {
   create,
   findById,
@@ -35,4 +43,5 @@ export const VisaApplicationRepository = {
   updateById,
   findActiveApplication,
   deleteById,
+  findByIdWithPopulate,
 };

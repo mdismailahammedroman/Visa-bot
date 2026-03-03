@@ -1,57 +1,99 @@
-import express from "express";
-import { VisaApplicationController } from "./visa.controller";
-
-import { Role } from "../user/user.interface";
-import { checkAuth } from "../../middlewares/checkAuth.middleware";
-import { uploadToS3 } from "../../middlewares/uploadS3";
 import { validateRequest } from "../../helpers/validateRequest";
+import { checkAuth } from "../../middlewares/checkAuth.middleware";
+import { Role } from "../user/user.interface";
+import { VisaApplicationController } from "./visa.controller";
 import { createVisaApplicationZodSchema } from "./visa.validation";
+import { Router } from "express";
 
-const router = express.Router();
+const router = Router();
 
-// -------------------- USER --------------------
+/* =====================================================
+   USER ROUTES
+===================================================== */
+
+// Apply Visa
 router.post(
   "/apply/:visaServiceId",
-  checkAuth(Role.USER, Role.ADMIN),
-  uploadToS3.fields([
-    { name: "passportCopy", maxCount: 1 },
-    { name: "passportPhoto", maxCount: 1 },
-    { name: "oldVisaCopy", maxCount: 1 },
-    { name: "bankStatement", maxCount: 1 },
-  ]),
+  checkAuth(Role.USER),
   validateRequest(createVisaApplicationZodSchema),
   VisaApplicationController.createVisaApplication,
 );
 
-// optional payment endpoint (user)
+// Update Visa Application (only their own)
+router.patch(
+  "/update/:id",
+  checkAuth(Role.USER),
+  VisaApplicationController.updateApplication,
+);
+
+// Pay Visa Application
 router.post(
-  "/:id/pay",
-  checkAuth(Role.USER, Role.ADMIN),
+  "/pay/:id",
+  checkAuth(Role.USER),
   VisaApplicationController.payVisaApplication,
 );
 
-// // -------------------- MANAGER / MAIN_MANAGER --------------------
+/* =====================================================
+   ADMIN ROUTES
+===================================================== */
+// Get all applications (with search/filter/pagination)
 router.get(
-  "/",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-  VisaApplicationController.getAllForManager,
+  "/admin/applications",
+  checkAuth(Role.ADMIN),
+  VisaApplicationController.getAllApplication,
 );
 
+// Get single application by ID
 router.get(
-  "/:id/application",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
+  "/admin/application/:id",
+  checkAuth(Role.ADMIN),
+  VisaApplicationController.getOneApplicationForAdmin,
+);
+
+// Assign application to manager
+router.patch(
+  "/admin/assign/:id",
+  checkAuth(Role.ADMIN),
+  VisaApplicationController.assignApplication,
+);
+
+// Delete application
+router.delete(
+  "/admin/:id",
+  checkAuth(Role.ADMIN),
+  VisaApplicationController.deleteVisaApplication,
+);
+
+/* =====================================================
+   MANAGER ROUTES
+===================================================== */
+
+// Get all assigned applications
+router.get(
+  "/manager/my-applications",
+  checkAuth(Role.MANAGER),
+  VisaApplicationController.getMyAssignedApplications,
+);
+
+// Get single assigned application by ID
+router.get(
+  "/manager/application/:id",
+  checkAuth(Role.MANAGER),
   VisaApplicationController.getOneForManager,
 );
 
+// Update assigned application (only assigned one)
 router.patch(
-  "/:id/status",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER),
-  VisaApplicationController.updateStatus,
+  "/manager/update/:id",
+  checkAuth(Role.MANAGER),
+  VisaApplicationController.updateByManager,
 );
-router.delete(
-  "/:id/application-delete",
-  checkAuth(Role.MANAGER, Role.MAIN_MANAGER, Role.ADMIN),
-  VisaApplicationController.deleteVisaApplication,
+
+// Update status (Approved/Rejected)
+router.patch(
+  "/manager/status/:id",
+  checkAuth(Role.MANAGER),
+  VisaApplicationController.updateStatus,
 );
 
 export const visaApplicationRoute = router;
