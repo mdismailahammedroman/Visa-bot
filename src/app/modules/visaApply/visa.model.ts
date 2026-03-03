@@ -17,11 +17,9 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
       required: true,
       index: true,
     },
-    visaServiceId: {
-      type: Schema.Types.ObjectId,
-      ref: "VisaService",
-      required: true,
-      index: true,
+    fromCountryName: {
+      type: String,
+      trim: true,
     },
     countryId: {
       type: Schema.Types.ObjectId,
@@ -29,6 +27,38 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
       required: true,
       index: true,
     },
+    visaServiceId: {
+      type: Schema.Types.ObjectId,
+      ref: "VisaService",
+      required: true,
+      index: true,
+    },
+
+    assignedTo: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+
+    assignmentHistory: [
+      {
+        assignedBy: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        assignedTo: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        assignedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
 
     fullName: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },

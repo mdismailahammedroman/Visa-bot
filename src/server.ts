@@ -5,35 +5,27 @@ import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
 import { setIo } from "./app/config/socket";
 import { connectRedis, disconnectRedis } from "./app/config/redis.config";
+import { initSockets } from "./app/modules/socket/socket";
 
 const server = http.createServer(app);
 
 const io = new SocketIoServer(server, {
   cors: {
     origin: envVar.FRONTEND_URL,
-    methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
+// 🔥 IMPORTANT ORDER
 setIo(io);
+initSockets(io);
 
-io.on("connection", (socket) => {
-  console.log("✅ New Client connected:", socket.id);
-
-  socket.on("message", (data) => {
-    console.log("📩 Message received:", data);
-    socket.emit("message", `Hello from server: ${data}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("❌ Client disconnected:", socket.id);
-  });
-});
-
+// 🔑 Bootstrap server
 async function bootstrap() {
   await connectDB();
   await connectRedis();
+  // await seedSuperAdmin();
+
   server.listen(envVar.PORT, () =>
     console.log(`🚀 Server running on port ${envVar.PORT}`),
   );

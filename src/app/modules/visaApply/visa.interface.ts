@@ -5,9 +5,15 @@ import { GENDER_TYPE } from "../user/user.interface";
    ENUMS (Runtime Safe)
 ========================= */
 
+export interface IAssignmentHistory {
+  assignedBy: Types.ObjectId;
+  assignedTo: Types.ObjectId;
+  assignedAt: Date;
+}
+
 export enum ApplicationStatus {
   PENDING = "Pending",
-  PROCESSING = "InProcessing",
+  PROCESSING = "In Process",
   APPROVED = "Approved",
   REJECTED = "Rejected",
 }
@@ -34,9 +40,11 @@ export interface IVisaApplication {
   trackingId: string;
 
   userId: Types.ObjectId;
+  fromCountryName?: string;
   visaServiceId: Types.ObjectId;
   countryId: Types.ObjectId;
-
+  assignedTo?: Types.ObjectId;
+  assignmentHistory?: IAssignmentHistory[];
   // Personal
   fullName?: string;
   email?: string;

@@ -10,50 +10,67 @@ import { envVar } from "./app/config/EnvVar";
 import { router } from "./app/routes";
 import passport from "./app/config/passport.config";
 import { visaPaymentController } from "./app/modules/visaPayment/visaPayment.controller";
+import rateLimit from "express-rate-limit";
 
 const app: Application = express();
 
+// 🛡 Security headers
 app.use(helmet());
+
+// 🏋️ Compression for faster response
 app.use(compression());
+
+// 📜 Request logging
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
+// 🏦 Rate Limiter (prevent abuse)
+app.set("trust proxy", 1);
+
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+
+// 🌐 CORS
+app.use(
+  cors({
+    origin: envVar.FRONTEND_URL || "*",
+    credentials: true,
+  }),
+);
+
+// 📦 Parse requests
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// 🔐 Passport auth
+app.use(passport.initialize());
+
+// 💳 Webhook route (Stripe example)
 app.post(
   "/api/v1/apply-visa/webhook",
   express.raw({ type: "application/json" }),
   visaPaymentController.stripeWebhookHandler,
 );
 
-// recommended: set real origins later (not true)
-app.use(
-  cors({
-    origin: envVar.FRONTEND_URL || false, // explicitly disable CORS if not configured
-    credentials: true,
-  }),
+// 🩺 Health endpoints
+app.get("/health/live", (_req: Request, res: Response) =>
+  res.status(200).json({ success: true, message: "Alive ✅" }),
 );
-
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(passport.initialize());
-
-// ✅ health endpoints
-app.get("/health/live", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, message: "Alive ✅" });
-});
-
-app.get("/health/ready", (req: Request, res: Response) => {
+app.get("/health/ready", (_req: Request, res: Response) =>
   res.status(200).json({
     success: true,
     message: "Ready ✅",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
-  });
-});
+  }),
+);
 
-// TODO: routes
+// 🔗 API routes
 app.use("/api/v1", router);
 
+// ❌ 404 handler
 app.use(notFound);
+
+// ⚠️ Global error handler
 app.use(globalErrorHandler);
 
 export default app;

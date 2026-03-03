@@ -21,14 +21,14 @@ router.post(
 // ✅ Get All Countries
 router.get(
   "/",
-  checkAuth(), // all authenticated users
+  checkAuth(...Object.values(Role)), // all authenticated users
   CountryController.getCountries,
 );
 
 // ✅ Get Single Country
 router.get(
   "/:id",
-  checkAuth(), // all authenticated users
+  checkAuth(...Object.values(Role)), // all authenticated users
   CountryController.getCountry,
 );
 

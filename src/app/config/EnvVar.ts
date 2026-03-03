@@ -28,6 +28,13 @@ interface AWS_S3_type {
   AWS_SECRET_ACCESS_KEY: string;
   AWS_REGION: string;
   AWS_BUCKET_NAME: string;
+  SNS_ANDROID_PLATFORM_ARN: string;
+  SNS_IOS_PLATFORM_ARN: string;
+}
+interface FIREBASE_TYPE {
+  FIREBASE_PROJECT_ID: string;
+  FIREBASE_CLIENT_EMAIL: string;
+  FIREBASE_PRIVATE_KEY: string;
 }
 
 interface EnvVar {
@@ -42,7 +49,8 @@ interface EnvVar {
   EXPRESS_SESSION_SECRET: string;
   FRONTEND_URL: string;
   REDIS: REDIS_TYPE;
-  AWS_S3: AWS_S3_type;
+  AWS: AWS_S3_type;
+  FIREBASE: FIREBASE_TYPE;
   SMTP: SMTP_TYPE;
   FIXER_API_KEY: string;
   STRIPE: STRIPE_TYPE;
@@ -69,6 +77,10 @@ const loadEnvVariables = (): EnvVar => {
     "AWS_SECRET_ACCESS_KEY",
     "AWS_REGION",
     "AWS_BUCKET_NAME",
+
+    "FIREBASE_PROJECT_ID",
+    "FIREBASE_CLIENT_EMAIL",
+    "FIREBASE_PRIVATE_KEY",
 
     "SMTP_HOST",
     "SMTP_PORT",
@@ -105,11 +117,19 @@ const loadEnvVariables = (): EnvVar => {
       REDIS_USERNAME: process.env.REDIS_USERNAME as string,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
     },
-    AWS_S3: {
+    AWS: {
       AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
       AWS_REGION: process.env.AWS_REGION as string,
       AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME as string,
+      SNS_ANDROID_PLATFORM_ARN: process.env.SNS_ANDROID_PLATFORM_ARN as string,
+      SNS_IOS_PLATFORM_ARN: process.env.SNS_IOS_PLATFORM_ARN as string,
+    },
+
+    FIREBASE: {
+      FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID as string,
+      FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL as string,
+      FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY as string,
     },
 
     SMTP: {

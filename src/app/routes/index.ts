@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { socketRouter } from "../modules/socket/socket.routes";
+
 import { countryRouter } from "../modules/country/country.routes";
 import { authRouter } from "../modules/auth/auth.route";
 import { otpRouter } from "../modules/Otp/otp.route";
@@ -22,10 +22,7 @@ const routes = [
     path: "/otp",
     route: otpRouter,
   },
-  {
-    path: "/socket",
-    route: socketRouter,
-  },
+
   {
     path: "/country",
     route: countryRouter,
