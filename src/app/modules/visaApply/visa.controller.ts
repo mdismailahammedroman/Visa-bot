@@ -49,6 +49,27 @@ const updateApplication = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyApplicationsController = CatchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as any; // logged-in user
+    const userId = user._id;
+
+    const result = await VisaApplicationService.getMyApplications(
+      userId,
+      req.query
+    );
+
+    return sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "User applications retrieved successfully",
+      data: result.data,
+      meta: result.meta,
+    });
+  }
+);
+
+
 const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
   const userId = user._id;
@@ -181,6 +202,7 @@ const updateStatus = CatchAsync(async (req: Request, res: Response) => {
 export const VisaApplicationController = {
   createVisaApplication,
   updateApplication,
+  getMyApplicationsController,
   payVisaApplication,
   getAllApplication,
   getOneApplicationForAdmin,

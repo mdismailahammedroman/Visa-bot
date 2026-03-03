@@ -26,6 +26,12 @@ router.patch(
   VisaApplicationController.updateApplication,
 );
 
+router.get(
+  "/my-applications",
+  checkAuth(Role.USER),
+  VisaApplicationController.getMyApplicationsController
+);
+
 // Pay Visa Application
 router.post(
   "/pay/:id",

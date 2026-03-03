@@ -54,6 +54,26 @@ const updateApplication = async (
   return updated;
 };
 
+const getMyApplications = async (userId: string, queryParams: any) => {
+  // QueryBuilder ব্যবহার করলে pagination, filtering, sorting, search সব handle হয়
+  const query = new QueryBuilder(
+    VisaApplicationRepository.findAll()
+      .find({ userId }) // 🔹 শুধু ওই user এর applications
+      .populate("visaServiceId")
+      .populate("countryId")
+      .populate("assignedTo", "name email role"),
+    queryParams
+  )
+    .search(["status", "visaType"]) // search by status, visaType etc
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await query.build();
+  return result;
+};
+
 const payVisaApplication = async (id: string, userId: string) => {
   const application = await VisaApplicationRepository.findById(id);
 
@@ -275,6 +295,7 @@ const updateByManager = async (
 export const VisaApplicationService = {
   createVisaApplication,
   updateApplication,
+  getMyApplications,
   payVisaApplication,
   getAllApplication,
   getOneForManager,
