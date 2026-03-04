@@ -25,6 +25,9 @@ const registerUser = async (payload: TCreateUserPayload) => {
     ...payload,
     password: passwordHash,
   });
+  if (payload.fcmToken) {
+    await userRepository.addFCMToken(newUser._id, payload.fcmToken);
+  }
   await otpService.sendOtp(newUser.email, "NEW_USER_VERIFY", newUser.name);
   return newUser;
 };
@@ -51,8 +54,6 @@ const updateUser = async (
   }
 
   // If file uploaded, update profile picture URL
-
-
 
   if (file) {
     update.profile_picture = file.location; // S3 public URL
@@ -116,7 +117,6 @@ const getUserProfileForAdmin = async (userId: string) => {
     status: user.status,
     role: user.role,
 
-
     memberSince: user.createdAt,
     lastLogin: user.lastLoginAt,
 
@@ -176,6 +176,17 @@ const deleteMyAccount = async (userId: string) => {
   return null;
 };
 
+const saveFCMToken = async (userId: string, fcmToken: string) => {
+  const user = await userRepository.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  const updatedUser = await userRepository.addFCMToken(userId, fcmToken);
+
+  return updatedUser?.fcmTokens;
+};
 // export user services
 export const userService = {
   registerUser,
@@ -186,4 +197,5 @@ export const userService = {
   changeUserStatus,
   changeUserRole,
   deleteMyAccount,
+  saveFCMToken,
 };

@@ -66,4 +66,6 @@ router.delete(
   userController.deleteMyAccount,
 );
 
+
+
 export const userRouter = router;

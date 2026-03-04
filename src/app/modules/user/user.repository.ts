@@ -2,6 +2,7 @@
 import { hashPassword } from "../../helpers/passwordHelper";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import {
+  AuthProviderType,
   IUser,
   Role,
   TCreateUserPayload,
@@ -10,65 +11,77 @@ import {
 } from "./user.interface";
 import { User } from "./user.model";
 
+/* ================= BASIC FINDS ================= */
+
 const findByEmail = (email: string) => {
   if (!email) return null;
-  return User.findOne({ email: email.toLowerCase() }).lean().exec();
+  return User.findOne({ email: email.toLowerCase().trim() }).lean().exec();
 };
 
 const findByEmailWithPassword = (email: string) => {
-  return User.findOne({ email: email.toLowerCase() })
+  return User.findOne({ email: email.toLowerCase().trim() })
     .select("+password")
-
     .exec();
 };
 
-const findById = (id: string) => {
-  return User.findById(id).lean().exec();
-};
+const findById = (id: string) => User.findById(id).lean().exec();
+
+const findByIdWithPassword = (id: string) =>
+  User.findById(id).select("+password").exec();
+
+const findByRole = (role: Role) => User.find({ role }).lean().exec();
+
+/* ================= CREATE USERS ================= */
 
 const register = (payload: TCreateUserPayload) => {
   return User.create({
     name: payload.name,
-    email: payload.email.toLowerCase(),
+    email: payload.email.toLowerCase().trim(),
     password: payload.password,
+    role: Role.USER,
   });
 };
 
-const updateStatusByEmail = (email: string, status: UserStatus) => {
-  return User.findOneAndUpdate(
-    { email: email.toLowerCase() },
-    { status },
-    { new: true },
-  )
-    .lean()
-    .exec();
+const createOAuthUser = (payload: Partial<IUser>) => {
+  if (payload.email) {
+    payload.email = payload.email.toLowerCase().trim();
+  }
+  return User.create(payload);
 };
 
-const updatePasswordByEmail = async (email: string, newPassword: string) => {
-  // Hash the password
-  const hashedPassword = await hashPassword(newPassword);
+/* ================= PROVIDER ================= */
 
-  // Update user
-  const updatedUser = await User.findOneAndUpdate(
-    { email: email.toLowerCase() },
-    { password: hashedPassword },
-    { new: true }, // returns the updated document
-  ).select("+password"); // include password if needed for verification
+const findByProvider = (
+  provider: AuthProviderType,
+  providerID: string,
+) => {
+  return User.findOne({
+    "auth_providers.provider": provider,
+    "auth_providers.providerID": providerID,
+  }).exec();
+};
 
-  return updatedUser;
+const addAuthProvider = (
+  userId: string,
+  provider: AuthProviderType,
+  providerID: string,
+) => {
+  return User.updateOne(
+    { _id: userId },
+    {
+      $addToSet: {
+        auth_providers: { provider, providerID },
+      },
+    },
+  ).exec();
 };
-// otp verify
-const verifyOtpByEmail = (email: string, update: Partial<IUser>) => {
-  return User.findOneAndUpdate(
-    { email: email.toLowerCase() },
-    { $set: update },
-    { new: true, runValidators: true },
-  )
-    .lean()
-    .exec();
-};
-// updateUserById
-const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
+
+/* ================= UPDATE ================= */
+
+const updateUser = (
+  userId: string,
+  update: Partial<TUpdateUserProfile>,
+) => {
   return User.findByIdAndUpdate(
     userId,
     { $set: update },
@@ -78,11 +91,68 @@ const updateUser = (userId: string, update: Partial<TUpdateUserProfile>) => {
     .exec();
 };
 
-const invalidateToken = async (userId: string) => {
-  return await User.findByIdAndUpdate(userId, { refreshToken: null })
+const updateStatusByEmail = (email: string, status: UserStatus) => {
+  return User.findOneAndUpdate(
+    { email: email.toLowerCase().trim() },
+    { status },
+    { new: true },
+  )
     .lean()
     .exec();
 };
+
+const updatePasswordByEmail = async (
+  email: string,
+  newPassword: string,
+) => {
+  const hashedPassword = await hashPassword(newPassword);
+
+  return User.findOneAndUpdate(
+    { email: email.toLowerCase().trim() },
+    { password: hashedPassword },
+    { new: true },
+  )
+    .select("+password")
+    .lean()
+    .exec();
+};
+
+const verifyOtpByEmail = (
+  email: string,
+  update: Partial<IUser>,
+) => {
+  return User.findOneAndUpdate(
+    { email: email.toLowerCase().trim() },
+    { $set: update },
+    { new: true, runValidators: true },
+  )
+    .lean()
+    .exec();
+};
+
+const invalidateToken = (userId: string) => {
+  return User.findByIdAndUpdate(userId, {
+    refreshToken: null,
+  })
+    .lean()
+    .exec();
+};
+
+const deleteUserById = (userId: string) => {
+  return User.findByIdAndDelete(userId).lean().exec();
+};
+
+const addFCMToken = (userId: string, token: string) => {
+  return User.findByIdAndUpdate(
+    userId,
+    { $addToSet: { fcmTokens: token } },
+    { new: true },
+  )
+    .lean()
+    .exec();
+};
+
+/* ================= QUERY ================= */
 
 const getAllUsersWithQuery = (params: QueryParams) => {
   return new QueryBuilder(User.find(), params)
@@ -94,32 +164,22 @@ const getAllUsersWithQuery = (params: QueryParams) => {
     .build();
 };
 
-const deleteUserById = (userId: string) => {
-  return User.findByIdAndDelete(userId).lean().exec(); // lean + fast
-};
-
-const findByIdWithPassword = (id: string) => {
-  return User.findById(id).select("+password").exec();
-};
-
-const findByRole = (role: Role) => {
-  return User.find({ role }).lean().exec();
-};
-
-// export  userRepository
-
 export const userRepository = {
   findByEmail,
   findByEmailWithPassword,
-  findByIdWithPassword,
   findById,
+  findByIdWithPassword,
+  findByRole,
   register,
-  updatePasswordByEmail,
-  updateStatusByEmail,
-  verifyOtpByEmail,
+  createOAuthUser,
+  findByProvider,
+  addAuthProvider,
   updateUser,
-  deleteUserById,
+  updateStatusByEmail,
+  updatePasswordByEmail,
+  verifyOtpByEmail,
   invalidateToken,
   getAllUsersWithQuery,
-  findByRole,
+  deleteUserById,
+  addFCMToken,
 };

@@ -283,7 +283,7 @@ const getMyAssignedApplications = async (
   return await query.build();
 };
 
-const updateByManager = async (
+const applicationUpdateByManager = async (
   applicationId: string,
   managerId: string,
   payload: Partial<IVisaApplication>,
@@ -340,6 +340,6 @@ export const VisaApplicationService = {
   deleteVisaApplication,
   assignApplication,
   getMyAssignedApplications,
-  updateByManager,
+  applicationUpdateByManager,
   getOneApplicationForAdmin,
 };
