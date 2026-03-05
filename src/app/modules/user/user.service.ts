@@ -176,6 +176,7 @@ const deleteMyAccount = async (userId: string) => {
   return null;
 };
 
+
 const saveFCMToken = async (userId: string, fcmToken: string) => {
   const user = await userRepository.findById(userId);
 
@@ -183,10 +184,23 @@ const saveFCMToken = async (userId: string, fcmToken: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
-  const updatedUser = await userRepository.addFCMToken(userId, fcmToken);
 
-  return updatedUser?.fcmTokens;
+  const fcmTokens = user.fcmTokens || [];
+
+  // Avoid duplicate tokens
+  if (!fcmTokens.includes(fcmToken)) {
+    fcmTokens.push(fcmToken);
+  }
+
+  await userRepository.updateUser(
+    userId,
+    { fcmTokens } as unknown as Partial<TUpdateUserProfile>,
+  );
+
+  return fcmTokens;
 };
+
+
 // export user services
 export const userService = {
   registerUser,

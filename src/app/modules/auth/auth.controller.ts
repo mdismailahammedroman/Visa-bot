@@ -16,9 +16,6 @@ import { envVar } from "../../config/EnvVar";
 import { userService } from "../user/user.service";
 import { normalizeTokens } from "../../utils/normalizeTokens";
 
-
-
-
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
 
@@ -59,7 +56,7 @@ const credentialLogin = CatchAsync(
         );
       }
 
-      const tokensToAdd = normalizeTokens(req.body.fcmToken);
+      const tokensToAdd = normalizeTokens(req.query.fcmToken);
 
       for (const token of tokensToAdd) {
         await userService.saveFCMToken(user._id, token);
@@ -125,8 +122,6 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
 
   return res.redirect(redirectUri);
 });
-
-
 
 // ========================================================================================================================================
 //                     use passport to user apple login

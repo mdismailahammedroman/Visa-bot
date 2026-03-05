@@ -159,6 +159,14 @@ const storeFCMToken = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any; // from auth middleware
   const { fcmToken } = req.body;
 
+  if (!fcmToken) {
+    return sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success: false,
+      message: "FCM token is required",
+    });
+  }
+
   const tokens = await userService.saveFCMToken(user._id, fcmToken);
 
   sendResponse(res, {
@@ -168,6 +176,7 @@ const storeFCMToken = CatchAsync(async (req: Request, res: Response) => {
     data: tokens,
   });
 });
+
 // userController/
 
 export const userController = {

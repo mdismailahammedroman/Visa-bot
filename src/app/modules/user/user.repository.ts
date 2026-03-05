@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { StatusCodes } from "http-status-codes";
+import AppError from "../../ErrorHelpers/AppError";
 import { hashPassword } from "../../helpers/passwordHelper";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import {
@@ -142,16 +144,27 @@ const deleteUserById = (userId: string) => {
   return User.findByIdAndDelete(userId).lean().exec();
 };
 
-const addFCMToken = (userId: string, token: string) => {
-  return User.findByIdAndUpdate(
-    userId,
-    { $addToSet: { fcmTokens: token } },
-    { new: true },
-  )
-    .lean()
-    .exec();
-};
+const addFCMToken = async (userId: string, fcmToken: string) => {
+  // Find user by ID
+  const user = await User.findById(userId);
 
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  // Ensure the fcmTokens array exists
+  user.fcmTokens = user.fcmTokens || [];
+
+  // Add the new token if it's not already in the array
+  if (!user.fcmTokens.includes(fcmToken)) {
+    user.fcmTokens.push(fcmToken);
+  }
+
+  // Save the user with the updated tokens
+  await user.save();
+
+  return user;
+};
 /* ================= QUERY ================= */
 
 const getAllUsersWithQuery = (params: QueryParams) => {
