@@ -1,4 +1,4 @@
-import { NotificationService } from './../notification/notification.service';
+import { NotificationService } from "./../notification/notification.service";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { VisaServiceRepository } from "./visaService.repository";
 import { CountryRepository } from "../country/country.repository";
@@ -6,7 +6,6 @@ import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
-
 
 /// Helper function to normalize and validate slugs
 const normalizeSlug = (value: string): string => {
@@ -26,11 +25,7 @@ const normalizeEnum = (val: string, enumObj: any) => {
   return upperVal;
 };
 
-const createVisaServiceForCountry = async (
-  countryId: string,
-  payload: any,
-
-) => {
+const createVisaServiceForCountry = async (countryId: string, payload: any) => {
   const country = await CountryRepository.findById(countryId);
   if (!country) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
 
