@@ -29,7 +29,7 @@ router.patch(
 router.get(
   "/my-applications",
   checkAuth(Role.USER),
-  VisaApplicationController.getMyApplicationsController
+  VisaApplicationController.getMyApplicationsController,
 );
 
 // Pay Visa Application
@@ -92,7 +92,7 @@ router.get(
 router.patch(
   "/manager/update/:id",
   checkAuth(Role.MANAGER),
-  VisaApplicationController.updateByManager,
+  VisaApplicationController.applicationUpdateByManager,
 );
 
 // Update status (Approved/Rejected)

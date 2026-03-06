@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { CatchAsync } from "../../utils/CatchAsync";
@@ -5,17 +6,40 @@ import { sendResponse } from "../../utils/sendResponse";
 import { VisaServiceService } from "./visaService.service";
 import AppError from "../../ErrorHelpers/AppError";
 import { QueryParams } from "../../utils/queryBuilder";
+import { ActivityLogService } from "../activity/activityLog.service";
 
 const createForCountry = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  const usreId = user._id;
+  const role = user.role;
   const countryId = req.params.countryId;
   if (!countryId)
     throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
 
-  const result = await VisaServiceService.createVisaServiceForCountry(
-    countryId as string,
-    req.body,
-  );
+const result = await VisaServiceService.createVisaServiceForCountry(
+  countryId as string,
+  {
+    ...req.body,
+    createdBy: usreId,
+  }
+);
 
+  await ActivityLogService.logActivity({
+    actorId: usreId,
+    actorRole: role,
+    action: "CREATE_VISA_SERVICE",
+    entityType: "VisaService",
+    entityId: result._id, // <-- ObjectId use করতে হবে
+    message: `Created visa service ${result.serviceName}`,
+    after: {
+      _id: result._id,
+      serviceName: result.serviceName,
+      slug: result.slug,
+      visaFee: result.visaFee,
+    },
+    ip: req.ip,
+    userAgent: req.get("user-agent"),
+  });
   return sendResponse(res, {
     success: true,
     statusCode: StatusCodes.CREATED,
@@ -79,7 +103,17 @@ const deleteService = CatchAsync(async (req: Request, res: Response) => {
   const result = await VisaServiceService.deleteVisaService(
     req.params.id as string,
   );
-
+  //   await ActivityLogService.logActivity({
+  //   actorId: usreId,
+  //   actorRole: role,
+  //   action: "DELETE_VISA_SERVICE",
+  //   entityType: "VisaService",
+  //   entityId: req.params.id,
+  //   message: `Deleted visa service with id ${req.params.id}`,
+  //   before: result,
+  //   ip: req.ip,
+  //   userAgent: req.get("user-agent"),
+  // });
   return sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -115,11 +149,16 @@ const getAllVisaServicesController = CatchAsync(
  * searchVisaServicesController
  */
 
-  const searchVisaServicesController= CatchAsync(async (req: Request, res: Response) => {
+const searchVisaServicesController = CatchAsync(
+  async (req: Request, res: Response) => {
     const countryId = req.params.countryId;
-    if (!countryId) throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
+    if (!countryId)
+      throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
 
-    const result = await VisaServiceService.searchVisaServices(countryId as string, req.query as QueryParams);
+    const result = await VisaServiceService.searchVisaServices(
+      countryId as string,
+      req.query as QueryParams,
+    );
 
     return sendResponse(res, {
       success: true,
@@ -128,8 +167,8 @@ const getAllVisaServicesController = CatchAsync(
       data: result.data,
       meta: result.meta,
     });
-  });
-
+  },
+);
 
 const updateStatus = CatchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -139,7 +178,10 @@ const updateStatus = CatchAsync(async (req: Request, res: Response) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "isActive must be boolean");
   }
 
-  const updatedService = await VisaServiceService.updateStatus(id as string, isActive);
+  const updatedService = await VisaServiceService.updateStatus(
+    id as string,
+    isActive,
+  );
 
   return sendResponse(res, {
     success: true,
@@ -148,7 +190,7 @@ const updateStatus = CatchAsync(async (req: Request, res: Response) => {
     data: updatedService,
   });
 });
-  
+
 export const VisaServiceController = {
   createForCountry,
   getByCountry,

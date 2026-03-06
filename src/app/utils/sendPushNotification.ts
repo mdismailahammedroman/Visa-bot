@@ -1,50 +1,38 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import httpStatus from "http-status-codes";
+import { messaging } from "firebase-admin";
 import { fcmMessaging } from "../config/firebase.config";
-import AppError from "../ErrorHelpers/AppError";
 
-
-interface PushResult {
-  successCount: number;
-  failureCount: number;
-}
-
-
-const normalizeData = (data: Record<string, any> = {}) => {
-  const normalized: Record<string, string> = {};
-
-  Object.entries(data).forEach(([k, v]) => {
-    if (v === undefined || v === null) return;
-    normalized[k] = typeof v === "string" ? v : String(v);
-  });
-
-  return normalized;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const toStringMap = (data?: Record<string, any>): Record<string, string> => {
+  const out: Record<string, string> = {};
+  if (!data) return out;
+  for (const k of Object.keys(data)) {
+    const v = data[k];
+    out[k] = typeof v === "string" ? v : JSON.stringify(v);
+  }
+  return out;
 };
 
-export const sendPushNotification = async (
+// Explicit return type using Firebase types
+export const sendPushToTokens = async (
   tokens: string[],
   title: string,
   body: string,
-  data: Record<string, any> = {},
-) : Promise<PushResult> => {
+  data?: Record<string, any>
+): Promise<messaging.BatchResponse> => {
   if (!tokens?.length) {
-    return { successCount: 0, failureCount: 0 };
+    // Return empty BatchResponse-like object
+    return {
+      responses: [],
+      successCount: 0,
+      failureCount: 0,
+    };
   }
 
-  const uniqueTokens = [...new Set(tokens)];
+  const res = await fcmMessaging().sendEachForMulticast({
+    tokens,
+    notification: { title, body },
+    data: toStringMap(data),
+  });
 
-  try {
-    const response = await fcmMessaging().sendEachForMulticast({
-      tokens: uniqueTokens,
-      notification: { title, body },
-      data: normalizeData(data),
-    });
-
-    return response;
-  } catch {
-    throw new AppError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      "Failed to send push notification",
-    );
-  }
+  return res;
 };

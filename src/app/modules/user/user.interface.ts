@@ -6,7 +6,8 @@ export enum UserStatus {
 }
 
 export enum AuthProviderType {
-  GOOGLE = "google",
+  GOOGLE = "GOOGLE",
+  APPLE = "APPLE",
   CREDENTIAL = "credential",
 }
 // Interface for authentication providers linked to the user
@@ -37,8 +38,6 @@ export interface ICoord {
   lat?: number; // Latitude (for backward compatibility)
   long?: number; // Longitude (for backward compatibility)
 }
-
-
 
 export interface IUser {
   _id: string;
@@ -73,16 +72,18 @@ export type TCreateUserPayload = {
   name: string;
   email: string;
   password: string;
+  fcmToken?: string;
 };
 
 export type TUpdateUserProfile = {
   name?: string;
   profile_picture?: string;
-  password: string;
+  password?: string;
+  isDeleted?: boolean;
   coverPicture?: string;
   gender?: GENDER_TYPE;
   mobile?: string;
-  isDeleted: boolean;
+
   location?: string;
   lastLoginAt?: Date;
   status?: UserStatus;

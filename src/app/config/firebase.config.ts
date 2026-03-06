@@ -1,5 +1,6 @@
-import admin from "firebase-admin";
-import { envVar } from "./EnvVar"; // or use process.env directly
+import  admin  from 'firebase-admin';
+
+import { envVar } from "./EnvVar";
 
 let initialized = false;
 

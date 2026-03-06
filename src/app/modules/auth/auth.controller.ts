@@ -13,7 +13,34 @@ import { createUserTokens } from "../../utils/authToken";
 import { JwtPayload } from "../../types/auth.types";
 import { redisClient } from "../../config/redis.config";
 import { envVar } from "../../config/EnvVar";
+import { userService } from "../user/user.service";
+import { normalizeTokens } from "../../utils/normalizeTokens";
 
+function sanitizeRedirect(input: unknown) {
+  if (typeof input !== "string") return "/";
+
+  // ✅ allow only your app scheme
+  if (input.startsWith("epicnz://callback")) return input;
+
+  // ✅ allow only relative paths for web
+  if (!input.startsWith("/")) return "/";
+  if (input.startsWith("//")) return "/";
+  return input;
+}
+
+function encodeState(payload: any) {
+  const json = JSON.stringify(payload);
+  return Buffer.from(json, "utf8").toString("base64url");
+}
+function decodeState(state?: string) {
+  if (!state) return null;
+  try {
+    const json = Buffer.from(state, "base64url").toString("utf8");
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
 // ========================================================================================================================================
 //                     use passport to user credentialLogin
 // ========================================================================================================================================
@@ -29,12 +56,15 @@ const credentialLogin = CatchAsync(
         );
       }
 
-      // create access + refresh tokens
+      const tokensToAdd = normalizeTokens(req.body.fcmTokens);
+
+      for (const token of tokensToAdd) {
+        await userService.saveFCMToken(user._id, token);
+      }
+
       const userTokens = await createUserTokens(user);
-      // ✅ set cookies
       setAuthCookie(res, userTokens);
 
-      // send response with tokens
       return sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
@@ -51,10 +81,94 @@ const credentialLogin = CatchAsync(
 // ========================================================================================================================================
 //                     use passport to user google login
 // ========================================================================================================================================
+const googleStart = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const redirect = sanitizeRedirect(req.query.redirect);
+    const state = encodeState({ redirect });
+
+    passport.authenticate("google", {
+      session: false,
+      scope: ["profile", "email"],
+      state,
+    })(req, res, next);
+  },
+);
+
+// ----------------- Google Callback -----------------
+const googleCallback = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+
+  if (!user?._id)
+    throw new AppError(StatusCodes.FORBIDDEN, "Google login failed");
+
+  // handle FCM (query based)
+  const tokensToAdd = normalizeTokens(req.query.fcmTokens);
+
+  for (const token of tokensToAdd) {
+    await userService.saveFCMToken(user._id, token);
+  }
+
+  const userTokens = await createUserTokens(user);
+  setAuthCookie(res, userTokens);
+
+  const decoded = decodeState(req.query.state as string);
+
+  let redirect = decoded?.redirect;
+  if (!redirect || !redirect.startsWith("epicnz://")) {
+    redirect = "epicnz://callback";
+  }
+
+  const redirectUri = `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`;
+
+  return res.redirect(redirectUri);
+});
 
 // ========================================================================================================================================
 //                     use passport to user apple login
 // ========================================================================================================================================
+
+const appleStart = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const redirect = sanitizeRedirect(req.query.redirect);
+    const state = encodeState({ redirect });
+    passport.authenticate("apple", {
+      session: false,
+      scope: ["name", "email"],
+      state, // comes back in req.body (form_post) or req.query
+    })(req, res, next);
+  },
+);
+
+const appleCallback = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+
+  if (!user?._id)
+    throw new AppError(StatusCodes.FORBIDDEN, "Apple login failed");
+
+  // body first (form_post), fallback query
+  const tokensToAdd = normalizeTokens(
+    req.body?.fcmTokens ?? req.query?.fcmTokens,
+  );
+
+  for (const token of tokensToAdd) {
+    await userService.saveFCMToken(user._id, token);
+  }
+
+  const userTokens = await createUserTokens(user);
+  setAuthCookie(res, userTokens);
+
+  const rawState = req.body?.state ?? req.query?.state;
+  const decoded = decodeState(rawState as string);
+
+  let redirect = decoded?.redirect;
+  if (!redirect || !redirect.startsWith("epicnz://")) {
+    redirect = "epicnz://callback";
+  }
+
+  const redirectUri = `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`;
+
+  return res.redirect(redirectUri);
+});
 
 // Forgot password
 const forgotPassword = CatchAsync(async (req: Request, res: Response) => {
@@ -146,6 +260,10 @@ const logout = CatchAsync(async (req: Request, res: Response) => {
 
 export const authController = {
   credentialLogin,
+  googleStart,
+  googleCallback,
+  appleStart,
+  appleCallback,
   forgotPassword,
   verifyOTP,
   resetPassword,

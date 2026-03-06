@@ -1,8 +1,10 @@
 import { Server, Socket } from "socket.io";
 import { chatSocket } from "./chat.socket";
 import { notificationSocket } from "./notification.socket";
+import { socketAuth } from "./socket.auth";
 
 export const initSockets = (io: Server) => {
+  io.use(socketAuth);
   io.on("connection", (socket: Socket) => {
     console.log("🔥 Client connected:", socket.id);
 

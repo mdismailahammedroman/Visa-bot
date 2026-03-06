@@ -1,64 +1,71 @@
-import { NotificationRepository } from "./notification.repository";
-import { NotificationType } from "./notification.interface";
-import { Types } from "mongoose";
-import { userRepository } from "../user/user.repository";
-import { sendPushNotification } from "../../utils/sendPushNotification";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Notification } from "./notification.model";
 
-const createNotification = async (
-  userId: string,
-  title: string,
-  message: string,
-  type: NotificationType,
-) => {
-  // Convert string to ObjectId
-  const userObjectId = new Types.ObjectId(userId);
-
-  return await NotificationRepository.create({
-    userId: userObjectId, // Store it as ObjectId
-
-    title,
-    message,
-    type,
-    isRead: false,
+const sendNotification = async (payload: {
+  userId: string;
+  title: string;
+  message: string;
+  type?: string;
+  metadata?: Record<string, any>;
+}) => {
+  // 1. Save to Database
+  const notification = await Notification.create({
+    userId: payload.userId,
+    title: payload.title,
+    message: payload.message,
+    type: payload.type || "SYSTEM",
+    metadata: payload.metadata || {},
   });
+
+  return notification;
 };
 
-const sendNotificationToUsers = async (
-  userIds: string[],
-  title: string,
-  message: string,
-  type: NotificationType
-) => {
-  const notifications = await Promise.all(
-    userIds.map(async (userId) => {
-      // Optional: fetch user's push tokens
-      const user = await userRepository.findById(userId);
-      const tokens = (user?.fcmTokens || []).map((t: string) => t.toString());
-      await sendPushNotification(tokens, title, message); // ✅ only 4 arguments
-      return await createNotification(userId, title, message, type);
-    })
+
+const getMyNotifications = async (userId: string, query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const notifications = await Notification.find({ userId })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Notification.countDocuments({ userId });
+  const unreadCount = await Notification.countDocuments({ userId, isRead: false });
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+      unreadCount,
+    },
+    data: notifications,
+  };
+};
+
+const markAsRead = async (notificationId: string, userId: string) => {
+  const notification = await Notification.findOneAndUpdate(
+    { _id: notificationId, userId },
+    { isRead: true },
+    { new: true }
   );
-  return notifications;
-};
-
-
-
-const getMyNotifications = async (userId: string) => {
-  return await NotificationRepository.findByUserId(userId);
-};
-
-const markOneAsRead = async (id: string) => {
-  return await NotificationRepository.markAsRead(id);
+  return notification;
 };
 
 const markAllAsRead = async (userId: string) => {
-  return await NotificationRepository.markAllAsRead(userId);
+  const result = await Notification.updateMany(
+    { userId, isRead: false },
+    { isRead: true }
+  );
+  return result;
 };
 
 export const NotificationService = {
-  createNotification,
-  sendNotificationToUsers,
+  sendNotification,
   getMyNotifications,
-  markOneAsRead,
+  markAsRead,
   markAllAsRead,
 };

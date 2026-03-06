@@ -36,6 +36,19 @@ interface FIREBASE_TYPE {
   FIREBASE_CLIENT_EMAIL: string;
   FIREBASE_PRIVATE_KEY: string;
 }
+interface GOOGLE_TYPE {
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_CALLBACK_URL: string;
+}
+
+interface APPLE_AUTH_TYPE {
+  APPLE_CLIENT_ID: string;
+  APPLE_TEAM_ID: string;
+  APPLE_KEY_ID: string;
+  APPLE_PRIVATE_KEY_PATH: string;
+  APPLE_CALLBACK_URL: string;
+}
 
 interface EnvVar {
   PORT: string;
@@ -54,6 +67,8 @@ interface EnvVar {
   SMTP: SMTP_TYPE;
   FIXER_API_KEY: string;
   STRIPE: STRIPE_TYPE;
+  GOOGLE_AUTH: GOOGLE_TYPE;
+  APPLE_AUTH: APPLE_AUTH_TYPE;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -93,6 +108,16 @@ const loadEnvVariables = (): EnvVar => {
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
     "STRIPE_CURRENCY",
+
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_CALLBACK_URL",
+
+    "APPLE_CLIENT_ID",
+    "APPLE_TEAM_ID",
+    "APPLE_KEY_ID",
+    "APPLE_PRIVATE_KEY_PATH",
+    "APPLE_CALLBACK_URL",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -145,6 +170,18 @@ const loadEnvVariables = (): EnvVar => {
       STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
       STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
       STRIPE_CURRENCY: process.env.STRIPE_CURRENCY as string,
+    },
+    GOOGLE_AUTH: {
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+      GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
+    },
+    APPLE_AUTH: {
+      APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID as string,
+      APPLE_TEAM_ID: process.env.APPLE_TEAM_ID as string,
+      APPLE_KEY_ID: process.env.APPLE_KEY_ID as string,
+      APPLE_PRIVATE_KEY_PATH: process.env.APPLE_PRIVATE_KEY_PATH as string,
+      APPLE_CALLBACK_URL: process.env.APPLE_CALLBACK_URL as string,
     },
   };
 };

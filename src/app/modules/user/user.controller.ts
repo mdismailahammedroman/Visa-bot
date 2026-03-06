@@ -12,6 +12,8 @@ import AppError from "../../ErrorHelpers/AppError";
 const registerUser = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = await userService.registerUser(req.body);
+
+    
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
       success: true,
@@ -23,7 +25,6 @@ const registerUser = CatchAsync(
 
 const updateUser = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
-
 
   const allowedFields = [
     "name",
@@ -153,6 +154,29 @@ const deleteMyAccount = CatchAsync(async (req: Request, res: Response) => {
     data: null,
   });
 });
+
+const storeFCMToken = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any; // from auth middleware
+  const { fcmToken } = req.body;
+
+  if (!fcmToken) {
+    return sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success: false,
+      message: "FCM token is required",
+    });
+  }
+
+  const tokens = await userService.saveFCMToken(user._id, fcmToken);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "FCM token stored successfully",
+    data: tokens,
+  });
+});
+
 // userController/
 
 export const userController = {
@@ -164,4 +188,5 @@ export const userController = {
   getAllUsers,
   getUserProfileByIdForAdmin,
   deleteMyAccount,
+  storeFCMToken,
 };

@@ -1,19 +1,52 @@
-import { model, Schema } from "mongoose";
-import { INotification, NotificationType } from "./notification.interface";
+import { Schema, model, Types } from "mongoose";
 
+export enum NotificationType {
+  SLOT_FOUND = "SLOT_FOUND",
+  APPOINTMENT_BOOKED = "APPOINTMENT_BOOKED",
+  APPOINTMENT_FAILED = "APPOINTMENT_FAILED",
+  PAYMENT_SUCCESS = "PAYMENT_SUCCESS",
+  PAYMENT_FAILED = "PAYMENT_FAILED",
+  SUBSCRIPTION_EXPIRING = "SUBSCRIPTION_EXPIRING",
+  SUBSCRIPTION_EXPIRED = "SUBSCRIPTION_EXPIRED",
+  SYSTEM_UPDATE = "SYSTEM_UPDATE",
+}
 
-const notificationSchema= new Schema<INotification>(
+const NotificationSchema = new Schema(
   {
-    userId:{type:Schema.Types.ObjectId, ref:"User", required:true, index:true},
-    title:{type:String, required:true, trim:true},
-    message:{type:String, required:true, trim:true},
-    type:{type:String, enum:Object.values(NotificationType), required:true},
-    isRead:{type:Boolean, default:false},
+    userId: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    title: {
+      type: String,
+      required: true,
+    },
+
+    message: {
+      type: String,
+      required: true,
+    },
+
+    type: {
+      type: String,
+      enum: Object.values(NotificationType),
+      required: true,
+    },
+
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+
+    metadata: {
+      type: Schema.Types.Mixed,
+    },
   },
-  {timestamps:true, versionKey:false},
-) 
+  {
+    timestamps: true,
+  }
+);
 
-
-export const NotificationModel= model<INotification>("Notification",
-  notificationSchema,
-)
+export const Notification = model("Notification", NotificationSchema);

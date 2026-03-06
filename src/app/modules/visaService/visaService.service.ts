@@ -1,3 +1,4 @@
+import { NotificationService } from './../notification/notification.service';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { VisaServiceRepository } from "./visaService.repository";
 import { CountryRepository } from "../country/country.repository";
@@ -5,6 +6,7 @@ import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
+
 
 /// Helper function to normalize and validate slugs
 const normalizeSlug = (value: string): string => {
@@ -24,61 +26,65 @@ const normalizeEnum = (val: string, enumObj: any) => {
   return upperVal;
 };
 
-const createVisaServiceForCountry = async (countryId: string, payload: any) => {
-  const country = await CountryRepository.findById(countryId);
-  if (!country) {
-    throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
-  }
+const createVisaServiceForCountry = async (
+  countryId: string,
+  payload: any,
 
-  // Auto generate slug
+) => {
+  const country = await CountryRepository.findById(countryId);
+  if (!country) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
+
+  // slug, enum normalization, totalFee etc (তোমার আগের logic)
   if (!payload.slug) {
-    if (!payload.serviceName) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "serviceName is required to generate slug",
-      );
-    }
+    if (!payload.serviceName)
+      throw new AppError(StatusCodes.BAD_REQUEST, "serviceName is required");
     payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
       payload.serviceName,
     )}`;
-  } else {
-    payload.slug = normalizeSlug(payload.slug);
-  }
+  } else payload.slug = normalizeSlug(payload.slug);
 
-  // ✅ Correctly normalize enums
-  if (payload.visaCategories) {
+  if (payload.visaCategories)
     payload.visaCategories = normalizeEnum(
       payload.visaCategories,
       VisaCategoryEnum,
     );
-  }
 
-  if (payload.visaType) {
+  if (payload.visaType)
     payload.visaType = normalizeEnum(payload.visaType, VisaTypeEnum);
-  }
 
-  // Calculate total fee
-  if (payload.visaFee !== undefined && payload.serviceFee !== undefined) {
+  if (payload.visaFee !== undefined && payload.serviceFee !== undefined)
     payload.totalFee = payload.visaFee + payload.serviceFee;
-  }
 
-  // ✅ Check duplicate inside SAME country
+  // duplicate check
   const existing = await VisaServiceRepository.findBySlugAndCountry(
     payload.slug,
     countryId,
   );
-
-  if (existing) {
+  if (existing)
     throw new AppError(
       StatusCodes.CONFLICT,
       "This slug already exists in this country",
     );
-  }
 
-  return await VisaServiceRepository.create({
-    ...payload,
-    countryId,
+  // create service
+  const result = await VisaServiceRepository.create({ ...payload, countryId });
+
+  /**
+   * 🔔 Notification Trigger
+   */
+  await NotificationService.sendNotification({
+    userId: payload.createdBy, // or adminId / system user
+    title: "New Visa Service Added",
+    message: `${payload.serviceName} service added for ${country.countryName}`,
+    type: "SYSTEM_UPDATE",
+    metadata: {
+      serviceId: result._id,
+      countryId,
+      serviceName: payload.serviceName,
+    },
   });
+
+  return result;
 };
 
 const updateVisaService = async (id: string, payload: any) => {
