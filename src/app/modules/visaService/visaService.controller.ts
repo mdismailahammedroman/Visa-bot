@@ -16,19 +16,27 @@ const createForCountry = CatchAsync(async (req: Request, res: Response) => {
   if (!countryId)
     throw new AppError(StatusCodes.BAD_REQUEST, "countryId is required");
 
-  const result = await VisaServiceService.createVisaServiceForCountry(
-    countryId as string,
-    req.body,
-  );
+const result = await VisaServiceService.createVisaServiceForCountry(
+  countryId as string,
+  {
+    ...req.body,
+    createdBy: usreId,
+  }
+);
 
   await ActivityLogService.logActivity({
     actorId: usreId,
     actorRole: role,
     action: "CREATE_VISA_SERVICE",
     entityType: "VisaService",
-    entityId: result._id,           // <-- ObjectId use করতে হবে
+    entityId: result._id, // <-- ObjectId use করতে হবে
     message: `Created visa service ${result.serviceName}`,
-    after: result,
+    after: {
+      _id: result._id,
+      serviceName: result.serviceName,
+      slug: result.slug,
+      visaFee: result.visaFee,
+    },
     ip: req.ip,
     userAgent: req.get("user-agent"),
   });

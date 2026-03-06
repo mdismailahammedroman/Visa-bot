@@ -1,34 +1,17 @@
-import { Router } from "express";
+import express from "express";
 import { NotificationController } from "./notification.controller";
-import { checkAuth } from "../../middlewares/checkAuth.middleware";
-import { Role } from "../user/user.interface";
+import { checkAuth as auth } from "../../middlewares/checkAuth.middleware";
+import { Role } from "../user/user.interface"; // Adjust if Role enum is elsewhere
 
-const router = Router();
+const router = express.Router();
 
-// User routes
-router.get(
-  "/",
-  checkAuth(...Object.values(Role)),
-  NotificationController.getMyNotifications,
-);
+// Get my notifications
+router.get("/", auth(Role.USER, Role.ADMIN, Role.MAIN_MANAGER), NotificationController.getMyNotifications);
 
-router.patch(
-  "/:id/read",
-  checkAuth(...Object.values(Role)),
-  NotificationController.markAsRead,
-);
+// Mark all as read
+router.patch("/read-all", auth(Role.USER, Role.ADMIN, Role.MAIN_MANAGER), NotificationController.markAllAsRead);
 
-router.patch(
-  "/read-all",
-  checkAuth(...Object.values(Role)),
-  NotificationController.markAllAsRead,
-);
+// Mark single notification as read
+router.patch("/:id/read", auth(Role.USER, Role.ADMIN, Role.MAIN_MANAGER), NotificationController.markAsRead);
 
-// Admin
-router.post(
-  "/send",
-  checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
-  NotificationController.sendNotificationToUsers,
-);
-
-export const notificationRouter = router;
+export const notificationRoute = router;

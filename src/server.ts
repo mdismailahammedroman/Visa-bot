@@ -3,9 +3,9 @@ import { Server as SocketIoServer } from "socket.io";
 import app from "./app";
 import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
-import { setIo } from "./app/config/socket";
 import { connectRedis, disconnectRedis } from "./app/config/redis.config";
 import { initSockets } from "./app/modules/socket/socket";
+import { setIo } from "./app/modules/socket/socket.store";
 
 const server = http.createServer(app);
 

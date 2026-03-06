@@ -1,75 +1,46 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
+
 import { NotificationService } from "./notification.service";
 import { CatchAsync } from "../../utils/CatchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 
 const getMyNotifications = CatchAsync(async (req: Request, res: Response) => {
-    const user = req.user as any; // better: custom payload type
-    const userId = user._id; // ✅ correct key
-
-  const result = await NotificationService.getMyNotifications(
-    userId,
-  );
+  const user=req.user as any
+  const userId =user._id
+  const result = await NotificationService.getMyNotifications(userId, req.query);
 
   sendResponse(res, {
+    statusCode: 200,
     success: true,
-    statusCode: StatusCodes.OK,
-    message: "Notifications retrieved successfully",
-    data: result,
+    message: "Notifications fetched successfully",
+    meta: result.meta,
+    data: result.data,
   });
 });
 
 const markAsRead = CatchAsync(async (req: Request, res: Response) => {
-  const { notificationId } = req.body;
-
-  const result = await NotificationService.markOneAsRead(notificationId);
+  const user=req.user as any
+  const userId=user._id
+  const result = await NotificationService.markAsRead(req.params.id as string, userId);
 
   sendResponse(res, {
+    statusCode: 200,
     success: true,
-    statusCode: StatusCodes.OK,
-    message: "Notification marked as read",
+    message: "Notification marked as read successfully",
     data: result,
   });
 });
 
 const markAllAsRead = CatchAsync(async (req: Request, res: Response) => {
-    const user = req.user as any; // better: custom payload type
-    const userId = user._id; // ✅ correct key
-
-  await NotificationService.markAllAsRead(userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "All notifications marked as read",
-  });
-});
-
-// Admin route: send notification to users
-const sendNotificationToUsers = CatchAsync(async (req: Request, res: Response) => {
-  const { userIds, title, message, type } = req.body;
-
-  if (!userIds?.length || !title || !message || !type) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: StatusCodes.BAD_REQUEST,
-      message: "Missing required fields",
-    });
-  }
-
-  const result = await NotificationService.sendNotificationToUsers(
-    userIds,
-    title,
-    message,
-    type
-  );
+  const user=req.user as any
+  const userId=user._id
+  const result = await NotificationService.markAllAsRead(userId);
 
   sendResponse(res, {
+    statusCode: 200,
     success: true,
-    statusCode: StatusCodes.OK,
-    message: "Notifications sent successfully",
+    message: "All notifications marked as read successfully",
     data: result,
   });
 });
@@ -78,5 +49,4 @@ export const NotificationController = {
   getMyNotifications,
   markAsRead,
   markAllAsRead,
-  sendNotificationToUsers,
 };

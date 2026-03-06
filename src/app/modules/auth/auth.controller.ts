@@ -56,7 +56,7 @@ const credentialLogin = CatchAsync(
         );
       }
 
-      const tokensToAdd = normalizeTokens(req.query.fcmToken);
+      const tokensToAdd = normalizeTokens(req.body.fcmTokens);
 
       for (const token of tokensToAdd) {
         await userService.saveFCMToken(user._id, token);
@@ -102,7 +102,7 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
     throw new AppError(StatusCodes.FORBIDDEN, "Google login failed");
 
   // handle FCM (query based)
-  const tokensToAdd = normalizeTokens(req.query.fcmToken);
+  const tokensToAdd = normalizeTokens(req.query.fcmTokens);
 
   for (const token of tokensToAdd) {
     await userService.saveFCMToken(user._id, token);
@@ -147,7 +147,7 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
 
   // body first (form_post), fallback query
   const tokensToAdd = normalizeTokens(
-    req.body?.fcmToken ?? req.query?.fcmToken,
+    req.body?.fcmTokens ?? req.query?.fcmTokens,
   );
 
   for (const token of tokensToAdd) {
