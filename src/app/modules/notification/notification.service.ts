@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Notification } from "./notification.model";
+import { NotificationRepository } from "./notification.repository";
 
 const sendNotification = async (payload: {
   userId: string;
@@ -9,30 +9,33 @@ const sendNotification = async (payload: {
   metadata?: Record<string, any>;
 }) => {
   // 1. Save to Database
-  const notification = await Notification.create({
-    userId: payload.userId,
-    title: payload.title,
-    message: payload.message,
-    type: payload.type || "SYSTEM",
-    metadata: payload.metadata || {},
-  });
+  const notification =
+    await NotificationRepository.createNotification(payload);
 
   return notification;
 };
 
 
-const getMyNotifications = async (userId: string, query: Record<string, unknown>) => {
+const getMyNotifications = async (
+  userId: string,
+  query: Record<string, unknown>
+) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const notifications = await Notification.find({ userId })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const notifications =
+    await NotificationRepository.findUserNotifications(
+      userId,
+      skip,
+      limit
+    );
 
-  const total = await Notification.countDocuments({ userId });
-  const unreadCount = await Notification.countDocuments({ userId, isRead: false });
+  const total =
+    await NotificationRepository.countUserNotifications(userId);
+
+  const unreadCount =
+    await NotificationRepository.countUnreadNotifications(userId);
 
   return {
     meta: {
@@ -46,21 +49,18 @@ const getMyNotifications = async (userId: string, query: Record<string, unknown>
   };
 };
 
-const markAsRead = async (notificationId: string, userId: string) => {
-  const notification = await Notification.findOneAndUpdate(
-    { _id: notificationId, userId },
-    { isRead: true },
-    { new: true }
+const markAsRead = async (
+  notificationId: string,
+  userId: string
+) => {
+  return NotificationRepository.updateNotificationAsRead(
+    notificationId,
+    userId
   );
-  return notification;
 };
 
 const markAllAsRead = async (userId: string) => {
-  const result = await Notification.updateMany(
-    { userId, isRead: false },
-    { isRead: true }
-  );
-  return result;
+  return NotificationRepository.updateAllNotificationsAsRead(userId);
 };
 
 export const NotificationService = {
