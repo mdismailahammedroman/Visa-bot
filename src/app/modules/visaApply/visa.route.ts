@@ -1,5 +1,6 @@
 import { validateRequest } from "../../helpers/validateRequest";
 import { checkAuth } from "../../middlewares/checkAuth.middleware";
+import { uploadToS3 } from "../../middlewares/uploadS3";
 import { Role } from "../user/user.interface";
 import { VisaApplicationController } from "./visa.controller";
 import { createVisaApplicationZodSchema } from "./visa.validation";
@@ -14,7 +15,13 @@ const router = Router();
 // Apply Visa
 router.post(
   "/apply/:visaServiceId",
-  checkAuth(Role.USER),
+  checkAuth(Role.USER,Role.ADMIN),
+    uploadToS3.fields([
+    { name: "passportCopy", maxCount: 1 },
+    { name: "passportPhoto", maxCount: 1 },
+    { name: "oldVisaCopy", maxCount: 1 },
+    { name: "bankStatement", maxCount: 1 },
+  ]),
   validateRequest(createVisaApplicationZodSchema),
   VisaApplicationController.createVisaApplication,
 );

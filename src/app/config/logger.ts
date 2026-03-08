@@ -1,22 +1,23 @@
 import winston from "winston";
 
-// Logger configuration
 const logger = winston.createLogger({
-  level: "info", // Default log level
+  level: "info",
   format: winston.format.combine(
-    winston.format.timestamp(), // Add timestamp to logs
-    winston.format.simple() // Simple log format (timestamp + message)
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
   ),
   transports: [
-    // Log to console
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(), // Colorizing the console logs
-        winston.format.simple() // Simple format
-      ),
+    new winston.transports.Console(),
+
+    new winston.transports.File({
+      filename: "logs/error.log",
+      level: "error",
     }),
-    // Log to file
-    new winston.transports.File({ filename: "app.log" }), // Logs will be saved to app.log
+
+    new winston.transports.File({
+      filename: "logs/app.log",
+    }),
   ],
 });
 

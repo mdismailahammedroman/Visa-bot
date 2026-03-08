@@ -70,6 +70,7 @@ const changePassword = async (
 // Logout user
 const logout = async (userId: string) => {
   await userRepository.invalidateToken(userId);
+  
 };
 
 // Update last login

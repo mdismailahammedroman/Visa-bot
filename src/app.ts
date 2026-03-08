@@ -10,7 +10,9 @@ import { envVar } from "./app/config/EnvVar";
 import { router } from "./app/routes";
 import passport from "./app/config/passport.config";
 import { visaPaymentController } from "./app/modules/visaPayment/visaPayment.controller";
-import rateLimit from "express-rate-limit";
+import { apiLimiter } from "./app/middlewares/rateLimiter";
+import { requestLogger } from "./app/middlewares/requestLogger";
+
 
 const app: Application = express();
 
@@ -26,7 +28,6 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 // 🏦 Rate Limiter (prevent abuse)
 app.set("trust proxy", 1);
 
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 // 🌐 CORS
 app.use(
@@ -40,17 +41,18 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(requestLogger);
 
 // 🔐 Passport auth
 app.use(passport.initialize());
-
+app.use("/api", apiLimiter) // Apply rate limiter to all /api routes
 // 💳 Webhook route (Stripe example)
 app.post(
   "/api/v1/apply-visa/webhook",
   express.raw({ type: "application/json" }),
   visaPaymentController.stripeWebhookHandler,
 );
-
+// requestLogger.ts ./logger.ts ,activityMiddleware  , swagger, envalid use case daw
 // 🩺 Health endpoints
 app.get("/health/live", (_req: Request, res: Response) =>
   res.status(200).json({ success: true, message: "Alive ✅" }),
