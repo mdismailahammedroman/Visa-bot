@@ -64,6 +64,10 @@ const credentialLogin = CatchAsync(
 
       const userTokens = await createUserTokens(user);
       setAuthCookie(res, userTokens);
+      // manager online
+      if (user.role === "MANAGER") {
+        await redisClient.rPush("managerQueue", user._id.toString());
+      }
 
       return sendResponse(res, {
         statusCode: StatusCodes.OK,
@@ -110,6 +114,10 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
 
   const userTokens = await createUserTokens(user);
   setAuthCookie(res, userTokens);
+  // manager online
+  if (user.role === "MANAGER") {
+    await redisClient.rPush("managerQueue", user._id.toString());
+  }
 
   const decoded = decodeState(req.query.state as string);
 
@@ -156,6 +164,11 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
 
   const userTokens = await createUserTokens(user);
   setAuthCookie(res, userTokens);
+
+  // manager online
+  if (user.role === "MANAGER") {
+    await redisClient.rPush("managerQueue", user._id.toString());
+  }
 
   const rawState = req.body?.state ?? req.query?.state;
   const decoded = decodeState(rawState as string);
@@ -233,6 +246,9 @@ const logout = CatchAsync(async (req: Request, res: Response) => {
   const payload = req.user as any;
 
   await redisClient.del(`refresh:${payload.userId}`);
+  if (payload.role === "MANAGER") {
+    await redisClient.lRem("managerQueue", 0, payload.userId);
+  }
 
   const isProduction = envVar.NODE_ENV === "production";
 
