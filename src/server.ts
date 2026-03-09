@@ -10,6 +10,8 @@ import { connectRedis, disconnectRedis } from "./app/config/redis.config";
 import { initSockets } from "./app/modules/socket/socket";
 import { setIo } from "./app/modules/socket/socket.store";
 import { setupSocketRedisAdapter } from "./app/config/redis.adapter";
+import logger from "./app/config/logger";
+
 
 const server = http.createServer(app);
 
@@ -35,9 +37,12 @@ async function bootstrap() {
 
   // await seedSuperAdmin();
 
-  server.listen(envVar.PORT, () =>
-    console.log(`🚀 Server running on port ${envVar.PORT}`)
-  );
+server.listen(envVar.PORT, () => {
+  logger.info("🚀 Server started", {
+    port: envVar.PORT,
+    env: process.env.NODE_ENV,
+  });
+});
 }
 
 bootstrap().catch((err) => {

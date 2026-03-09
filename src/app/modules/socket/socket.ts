@@ -12,12 +12,13 @@ import {
   addManagerToQueue,
   removeManagerFromQueue,
 } from "../chat/queue/manager.queue";
+import logger from "../../config/logger";
 
 export const initSockets = (io: Server) => {
   io.use(socketAuth);
 
   io.on("connection", async (socket: Socket) => {
-    console.log("🔥 Client connected:", socket.id);
+    logger.info("🔥 Client connected:", socket.id);
 
     const user = socket.data.user;
 

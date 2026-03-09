@@ -2,6 +2,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from "redis";
 import { Server } from "socket.io";
 import { envVar } from "./EnvVar";
+import logger from "./logger";
 
 
 export const setupSocketRedisAdapter = async (io: Server) => {
@@ -21,5 +22,5 @@ export const setupSocketRedisAdapter = async (io: Server) => {
 
   io.adapter(createAdapter(pubClient, subClient));
 
-  console.log("🔁 Socket Redis adapter initialized");
+  logger.info("🔁 Socket Redis adapter initialized");
 };
