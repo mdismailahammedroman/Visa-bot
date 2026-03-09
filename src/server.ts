@@ -1,11 +1,15 @@
 import http from "http";
 import { Server as SocketIoServer } from "socket.io";
 import app from "./app";
+
 import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
 import { connectRedis, disconnectRedis } from "./app/config/redis.config";
+
+
 import { initSockets } from "./app/modules/socket/socket";
 import { setIo } from "./app/modules/socket/socket.store";
+import { setupSocketRedisAdapter } from "./app/config/redis.adapter";
 
 const server = http.createServer(app);
 
@@ -16,18 +20,23 @@ const io = new SocketIoServer(server, {
   },
 });
 
-// 🔥 IMPORTANT ORDER
-setIo(io);
-initSockets(io);
-
 // 🔑 Bootstrap server
 async function bootstrap() {
+
   await connectDB();
   await connectRedis();
+
+  // 🔥 IMPORTANT ORDER
+  setIo(io);
+
+  await setupSocketRedisAdapter(io);
+
+  initSockets(io);
+
   // await seedSuperAdmin();
 
   server.listen(envVar.PORT, () =>
-    console.log(`🚀 Server running on port ${envVar.PORT}`),
+    console.log(`🚀 Server running on port ${envVar.PORT}`)
   );
 }
 

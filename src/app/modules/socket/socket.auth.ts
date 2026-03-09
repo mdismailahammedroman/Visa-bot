@@ -5,7 +5,9 @@ import { envVar } from "../../config/EnvVar";
 
 export const socketAuth = (socket: Socket, next: any) => {
   try {
-    const token = socket.handshake.auth?.token;
+    const token =
+      socket.handshake.auth?.token ||
+      socket.handshake.headers?.authorization?.split(" ")[1];
 
     if (!token) {
       return next(new Error("Unauthorized"));
@@ -13,11 +15,12 @@ export const socketAuth = (socket: Socket, next: any) => {
 
     const decoded = jwt.verify(token, envVar.JWT_SECRET) as any;
 
-    socket.data.user = decoded; // store user in socket
+    socket.data.user = decoded;
 
     next();
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.error("Socket auth error:", error);
+
     next(new Error("Authentication failed"));
   }
 };

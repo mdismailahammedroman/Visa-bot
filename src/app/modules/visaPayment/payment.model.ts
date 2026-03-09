@@ -11,14 +11,14 @@ const paymentSchema = new Schema<IVisaApplicationPayment>(
       type: Schema.Types.ObjectId,
       ref: "VisaApplication",
       required: true,
-      index: true,
+
     },
 
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
+
     },
 
     paymentIntentId: {

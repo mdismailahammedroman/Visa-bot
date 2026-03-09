@@ -27,16 +27,30 @@ export const disconnectRedis = async () => {
   if (redisClient?.isOpen) await redisClient.quit();
 };
 
-// JSON helpers
-export const setCache = async (key: string, value: unknown, ttl?: number) => {
+/**
+ * Cache Helpers
+ */
+
+export const setCache = async (
+  key: string,
+  value: unknown,
+  ttl?: number
+) => {
   const data = JSON.stringify(value);
-  if (ttl) await redisClient.set(key, data, { EX: ttl });
-  else await redisClient.set(key, data);
+
+  if (ttl) {
+    await redisClient.set(key, data, { EX: ttl });
+  } else {
+    await redisClient.set(key, data);
+  }
 };
 
 export const getCache = async <T>(key: string): Promise<T | null> => {
   const data = await redisClient.get(key);
-  return data ? (JSON.parse(data) as T) : null;
+
+  if (!data) return null;
+
+  return JSON.parse(data) as T;
 };
 
 export const deleteCache = async (key: string) => {
