@@ -7,6 +7,7 @@ import { userRouter } from "../modules/user/user.route";
 import { visaServiceRouter } from "../modules/visaService/visaService.route";
 import { visaApplicationRoute } from "../modules/visaApply/visa.route";
 import { notificationRoute } from "../modules/notification/notification.route";
+import { visaPaymentRouter } from "../modules/visaPayment/payment.route";
 // import { chatRoute } from "../modules/chat/chat.route";
 
 export const router = Router();
@@ -40,6 +41,10 @@ const routes = [
   {
     path: "/notification",
     route: notificationRoute,
+  },
+  {
+    path:"/payment",
+    route:visaPaymentRouter,
   },
   // {
   //   path: "/chat",

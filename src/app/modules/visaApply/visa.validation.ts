@@ -28,9 +28,9 @@ export const createVisaApplicationZodSchema = z.object({
     status: z
       .enum(["Pending", "Processing", "Approved", "Rejected"])
       .optional(),
-    passportCopy: z.string().min(1).optional(),
-    passportPhoto: z.string().min(1).optional(),
-    oldVisaCopy: z.string().min(1).optional(),
+    passportCopy: z.string().optional(),
+    passportPhoto: z.string().optional(),
+    oldVisaCopy: z.string().optional(),
     bankStatement: z.string().optional(),
   }),
 });

@@ -18,11 +18,7 @@ export enum ApplicationStatus {
   REJECTED = "Rejected",
 }
 
-export enum PaymentStatus {
-  UNPAID = "Unpaid",
-  PAID = "Paid",
-  REFUNDED = "Refunded",
-}
+
 
 export enum IncomeSource {
   SELF_FUNDED = "Self Funded",
@@ -71,7 +67,7 @@ export interface IVisaApplication {
   serviceFee?: number;
   totalFee?: number;
 
-  paymentStatus: PaymentStatus;
+
   status: ApplicationStatus;
 
   createdAt?: Date;

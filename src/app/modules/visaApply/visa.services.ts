@@ -4,10 +4,8 @@ import AppError from "../../ErrorHelpers/AppError";
 import {
   ApplicationStatus,
   IVisaApplication,
-  PaymentStatus,
 } from "./visa.interface";
 import { VisaApplicationRepository } from "./visa.repository";
-import { stripe } from "../../config/stripe";
 import { VisaServiceRepository } from "../visaService/visaService.repository";
 import { QueryBuilder } from "../../utils/queryBuilder";
 import { Types } from "mongoose";
@@ -76,27 +74,6 @@ const getMyApplications = async (userId: string, queryParams: any) => {
 
   const result = await query.build();
   return result;
-};
-
-const payVisaApplication = async (id: string, userId: string) => {
-  const application = await VisaApplicationRepository.findById(id);
-
-  if (!application)
-    throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
-  if (application.userId.toString() !== userId)
-    throw new AppError(StatusCodes.FORBIDDEN, "Unauthorized");
-  if (application.paymentStatus === PaymentStatus.PAID)
-    throw new AppError(StatusCodes.BAD_REQUEST, "Already paid");
-  if (!application.totalFee || application.totalFee <= 0)
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid amount");
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(application.totalFee * 100), // cents
-    currency: "usd",
-    metadata: { applicationId: id, userId },
-  });
-
-  return { clientSecret: paymentIntent.client_secret };
 };
 
 const getAllApplication = async (queryParams: any) => {
@@ -309,7 +286,6 @@ export const VisaApplicationService = {
   createVisaApplication,
   updateApplication,
   getMyApplications,
-  payVisaApplication,
   getAllApplication,
   getOneForManager,
   updateStatus,

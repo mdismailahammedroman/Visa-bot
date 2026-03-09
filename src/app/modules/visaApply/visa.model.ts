@@ -4,7 +4,6 @@ import {
   ApplicationStatus,
   IncomeSource,
   IVisaApplication,
-  PaymentStatus,
 } from "./visa.interface";
 import { GENDER_TYPE } from "../user/user.interface";
 
@@ -80,11 +79,6 @@ const visaApplicationSchema = new Schema<IVisaApplication>(
     serviceFee: { type: Number },
     totalFee: { type: Number },
 
-    paymentStatus: {
-      type: String,
-      enum: Object.values(PaymentStatus),
-      default: PaymentStatus.UNPAID,
-    },
     status: {
       type: String,
       enum: Object.values(ApplicationStatus),
