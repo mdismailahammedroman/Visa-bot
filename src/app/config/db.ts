@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// ./app/config/db.ts
 import mongoose from "mongoose";
-import { envVar } from "./EnvVar";
 import logger from "./logger";
-
+import { envVar } from "./EnvVar";
 
 export const connectDB = async (): Promise<void> => {
   try {
@@ -20,7 +20,7 @@ export const connectDB = async (): Promise<void> => {
 export const disconnectDB = async (): Promise<void> => {
   try {
     await mongoose.connection.close();
-     logger.info("✅ MongoDB disconnected");
+    logger.info("✅ MongoDB disconnected");
   } catch (error: any) {
     logger.error("❌ MongoDB disconnect failed:", error?.message || error);
   }

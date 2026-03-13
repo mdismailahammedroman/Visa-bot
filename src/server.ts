@@ -46,7 +46,7 @@ server.listen(envVar.PORT, () => {
 }
 
 bootstrap().catch((err) => {
-  console.error("❌ Failed to start server:", err);
+  logger.error("❌ Failed to start server:", err);
   process.exit(1);
 });
 
@@ -56,34 +56,34 @@ async function shutdown(exitCode: number, reason?: string) {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  console.log(`🧩 Shutting down... ${reason ?? ""}`.trim());
+  logger.info(`🧩 Shutting down... ${reason ?? ""}`.trim());
 
   server.close(async () => {
     try {
       io.close();
       await disconnectDB();
       await disconnectRedis();
-      console.log("✅ Server closed gracefully.");
+      logger.info("✅ Server closed gracefully.");
       process.exit(exitCode);
     } catch (e) {
-      console.error("❌ Shutdown cleanup failed:", e);
+      logger.error("❌ Shutdown cleanup failed:", e);
       process.exit(1);
     }
   });
 
   setTimeout(() => {
-    console.error("⏳ Force shutdown (timeout).");
+    logger.error("⏳ Force shutdown (timeout).");
     process.exit(1);
   }, 10_000).unref();
 }
 
 process.on("uncaughtException", (err) => {
-  console.error("💥 Uncaught Exception!", err);
+  logger.error("💥 Uncaught Exception!", err);
   shutdown(1, "uncaughtException");
 });
 
 process.on("unhandledRejection", (err) => {
-  console.error("⚠️ Unhandled Rejection!", err);
+  logger.error("⚠️ Unhandled Rejection!", err);
   shutdown(1, "unhandledRejection");
 });
 

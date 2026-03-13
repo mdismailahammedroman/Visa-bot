@@ -24,11 +24,7 @@ router.get(
 ===================================================== */
 
 // Get all feedback
-router.get(
-  "/",
-  checkAuth( Role.ADMIN),
-  feedbackController.getAllFeedback,
-);
+router.get("/", checkAuth(Role.ADMIN), feedbackController.getAllFeedback);
 
 // Get feedback by visa application
 router.get(

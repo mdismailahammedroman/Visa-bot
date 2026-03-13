@@ -7,7 +7,7 @@ export const assignManagerToChat = async (chatId: string) => {
   const managerId = await getNextManager();
 
   if (!managerId) {
-    throw new Error("No manager available");
+    return null;
   }
 
   const chat = await ChatRepository.updateChat(chatId, {

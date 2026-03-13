@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-;
 import { feedbackService } from "./feedback.service";
 import { CatchAsync } from "../../utils/CatchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 
 const submitFeedback = CatchAsync(async (req: Request, res: Response) => {
-
-    const user = req.user as any;
-    const userId = user._id
+  const user = req.user as any;
+  const userId = user._id;
 
   // Merge userId with body
   const payload = {
@@ -28,9 +26,9 @@ const submitFeedback = CatchAsync(async (req: Request, res: Response) => {
 
 const getMyFeedback = CatchAsync(async (req: any, res: Response) => {
   // ✅ Ensure req.user.id is coming from checkAuth
-    const user = req.user as any;
-    const userId = user._id
-console.log("Logged in user:", req.user);
+  const user = req.user as any;
+  const userId = user._id;
+  console.log("Logged in user:", req.user);
   if (!userId) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
@@ -66,8 +64,9 @@ const getFeedbackByVisaApplication = CatchAsync(
   async (req: Request, res: Response) => {
     const { visaApplicationId } = req.params;
 
-    const result =
-      await feedbackService.getFeedbackByVisaApplication(visaApplicationId as string);
+    const result = await feedbackService.getFeedbackByVisaApplication(
+      visaApplicationId as string,
+    );
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
