@@ -28,7 +28,7 @@ router.get("/", checkAuth(Role.ADMIN), feedbackController.getAllFeedback);
 
 // Get feedback by visa application
 router.get(
-  "/:visaApplicationId",
+  "/:feadbackId",
   checkAuth(Role.ADMIN),
   feedbackController.getFeedbackByVisaApplication,
 );

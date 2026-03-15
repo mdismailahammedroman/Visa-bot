@@ -9,11 +9,7 @@ import { assignManagerToChat } from "./queue/manager.assignment";
 import { getIo } from "../socket/socket.store";
 import { generateAIReply } from "./AI/ai.agent";
 
-export const sendUserMessage = async (
-  userId: string,
-  message: string
-) => {
-
+export const sendUserMessage = async (userId: string, message: string) => {
   let chat = await ChatRepository.findUserChat(userId);
 
   if (!chat) {
@@ -41,7 +37,6 @@ export const sendUserMessage = async (
   io.to(`chat_${chatId}`).emit("new-message", userMsg);
 
   if (chat.managerId) {
-
     io.to(`user_${chat.managerId}`).emit("manager-new-message", {
       chatId,
       message: userMsg,
@@ -53,8 +48,22 @@ export const sendUserMessage = async (
   const ai = await generateAIReply(userId, message);
 
   if (ai.escalate) {
-
     const assigned = await assignManagerToChat(chatId);
+
+    if (!assigned) {
+      const aiMsg = await ChatRepository.createMessage({
+        chatId: chat._id,
+        sender: ChatSender.AI,
+        message: "No manager available right now. Please try again later.",
+        read: false,
+      });
+
+      const io = getIo();
+
+      io.to(`chat_${chatId}`).emit("new-message", aiMsg);
+
+      return aiMsg;
+    }
 
     const aiMsg = await ChatRepository.createMessage({
       chatId: chat._id,

@@ -6,21 +6,15 @@ const createFeedback = async (payload: IFeedback) => {
 };
 
 const findAll = () => {
-  return Feedback.find()
-    .populate("userId")
-    .populate("visaApplicationId");
+  return Feedback.find();
 };
 
 const findByUserId = (userId: string) => {
-  return Feedback.find({ userId })
-    .populate("userId")
-    .populate("visaApplicationId");
+  return Feedback.find({ userId });
 };
 
-const findByVisaApplicationId = (visaApplicationId: string) => {
-  return Feedback.find({ visaApplicationId })
-    .populate("userId")
-    .populate("visaApplicationId");
+const findByFeedbackId = (visaApplicationId: string) => {
+  return Feedback.find({ visaApplicationId });
 };
 
 const deleteFeedback = async (id: string) => {
@@ -31,6 +25,6 @@ export const feedbackRepository = {
   createFeedback,
   findAll,
   findByUserId,
-  findByVisaApplicationId,
+  findByFeedbackId,
   deleteFeedback,
 };

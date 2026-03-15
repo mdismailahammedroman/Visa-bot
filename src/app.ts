@@ -43,10 +43,7 @@ app.post(
 );
 
 // THEN JSON PARSER
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
 
-// 📦 Parse requests
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

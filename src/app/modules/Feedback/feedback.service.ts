@@ -32,8 +32,8 @@ const getAllFeedback = async (query: QueryParams) => {
   return await queryBuilder.build();
 };
 
-const getFeedbackByVisaApplication = async (visaApplicationId: string) => {
-  return await feedbackRepository.findByVisaApplicationId(visaApplicationId);
+const getFeedbackByVisaApplication = async (feedbackId: string) => {
+  return await feedbackRepository.findByFeedbackId(feedbackId);
 };
 
 const deleteFeedback = async (id: string) => {

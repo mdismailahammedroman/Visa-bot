@@ -28,7 +28,6 @@ const getMyFeedback = CatchAsync(async (req: any, res: Response) => {
   // ✅ Ensure req.user.id is coming from checkAuth
   const user = req.user as any;
   const userId = user._id;
-  console.log("Logged in user:", req.user);
   if (!userId) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
@@ -62,10 +61,10 @@ const getAllFeedback = CatchAsync(async (req: Request, res: Response) => {
 
 const getFeedbackByVisaApplication = CatchAsync(
   async (req: Request, res: Response) => {
-    const { visaApplicationId } = req.params;
+    const { feedbackId } = req.params;
 
     const result = await feedbackService.getFeedbackByVisaApplication(
-      visaApplicationId as string,
+      feedbackId as string,
     );
 
     sendResponse(res, {
