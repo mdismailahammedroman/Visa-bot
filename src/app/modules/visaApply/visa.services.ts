@@ -11,12 +11,13 @@ import { QueryBuilder } from "../../utils/queryBuilder";
 import { Types } from "mongoose";
 import { userRepository } from "../user/user.repository";
 import { Role } from "../user/user.interface";
+import { NotificationService } from "../notification/notification.service";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
   const applyVisaServices = await VisaServiceRepository.findById(
     payload.visaServiceId.toString(),
   );
-  if (!applyVisaServices) throw new Error("Visa Service not found");
+if (!applyVisaServices) throw new AppError(StatusCodes.NOT_FOUND, "Visa Service not found");
 
   // 🔎 Check previous application for same user + service
   const activeApplication =
@@ -106,7 +107,7 @@ const getOneForManager = async (id: string) => {
 };
 
 const updateStatus = async (id: string, status: ApplicationStatus) => {
-  // optional runtime validation
+  // ✅ Validate status
   if (!Object.values(ApplicationStatus).includes(status)) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status value");
   }
@@ -123,6 +124,20 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
   }
 
+  // 🔔 Send notification to assigned manager (if assigned)
+  if (application.assignedTo) {
+    try {
+      await NotificationService.sendNotification({
+        userId: application.assignedTo.toString(),
+        title: "Visa Application Status Updated",
+        message: `Application #${application._id} status updated to ${status}`,
+        type: "APPLICATION_STATUS_UPDATE",
+        metadata: { applicationId: application._id, newStatus: status },
+      });
+    } catch (err) {
+      console.error("Failed to send status update notification:", err);
+    }
+  }
 
   return updated;
 };
@@ -194,6 +209,13 @@ const assignApplication = async (
   await application.save();
 
   // 🔔 Notify manager
+  await NotificationService.sendNotification({
+  userId: managerId,
+  title: "New Application Assigned",
+  message: `You have been assigned application #${applicationId}`,
+  type: "APPLICATION_ASSIGNMENT",
+  metadata: { applicationId }
+});
 
   return await VisaApplicationRepository.findByIdWithPopulate(applicationId);
 };
