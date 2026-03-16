@@ -15,7 +15,7 @@ const router = Router();
 // Apply Visa
 router.post(
   "/apply/:visaServiceId",
-  checkAuth(Role.USER,Role.ADMIN),
+  checkAuth(Role.USER),
     uploadToS3.fields([
     { name: "passportCopy", maxCount: 1 },
     { name: "passportPhoto", maxCount: 1 },
@@ -29,7 +29,7 @@ router.post(
 // Update Visa Application (only their own)
 router.patch(
   "/update/:id",
-  checkAuth(Role.USER),
+  checkAuth(Role.USER, Role.MANAGER),
   VisaApplicationController.updateApplication,
 );
 
@@ -61,7 +61,7 @@ router.get(
 // Assign application to manager
 router.patch(
   "/admin/assign/:id",
-  checkAuth(Role.ADMIN),
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
   VisaApplicationController.assignApplication,
 );
 

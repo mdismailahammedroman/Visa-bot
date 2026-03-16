@@ -34,7 +34,7 @@ router.get(
 // ✅ Get all users (admin/manager)
 router.get(
   "/all-users",
-  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER, Role.USER),
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER, ),
   userController.getAllUsers,
 );
 

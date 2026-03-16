@@ -13,23 +13,13 @@ const subscribe = async (email: string) => {
     throw new AppError(StatusCodes.CONFLICT, "Already subscribed");
   }
 
-  const subscriber = existing
-    ? await NewsletterRepository.updateSubscriber(email, {
-        status: "SUBSCRIBED",
-      })
-    : await NewsletterRepository.createSubscriber({ email });
-
-  // optional notification
-  if (subscriber.userId) {
-    await NotificationService.sendNotification({
-      userId: subscriber.userId,
-      title: "Newsletter Subscription",
-      message: "You have successfully subscribed to our newsletter",
-      type: "NEWSLETTER",
+  if (existing) {
+    return NewsletterRepository.updateSubscriber(email, {
+      status: "SUBSCRIBED",
     });
   }
 
-  return subscriber;
+  return NewsletterRepository.createSubscriber({ email });
 };
 
 const unsubscribe = async (email: string) => {
