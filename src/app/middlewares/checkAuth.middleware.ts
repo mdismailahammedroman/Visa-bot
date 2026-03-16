@@ -33,7 +33,7 @@ export const checkAuth =
       }
 
       // ✅ Fetch full user from DB
-      const user = await User.findById(decoded.userId);
+      const user = await User.findById(decoded.userId).lean();
       if (!user) {
         throw new AppError(httpStatus.UNAUTHORIZED, "User not found");
       }
@@ -55,7 +55,7 @@ export const checkAuth =
       }
 
       // ✅ Role-based authorization
-      if (allowedRoles.length && !allowedRoles.includes(decoded.role)) {
+      if (allowedRoles.length && !allowedRoles.includes(user.role)) {
         throw new AppError(
           httpStatus.FORBIDDEN,
           "You are not authorized to access this route",

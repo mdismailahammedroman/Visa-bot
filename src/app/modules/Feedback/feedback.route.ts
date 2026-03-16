@@ -15,7 +15,7 @@ router.post("/submit", checkAuth(Role.USER), feedbackController.submitFeedback);
 // Get logged-in user's feedback
 router.get(
   "/my-feedback",
-  checkAuth(Role.USER, Role.ADMIN),
+  checkAuth(Role.USER,),
   feedbackController.getMyFeedback,
 );
 

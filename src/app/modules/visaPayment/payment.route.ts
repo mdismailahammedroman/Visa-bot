@@ -11,16 +11,18 @@ router.post(
   visaPaymentController.payVisaApplication,
 );
 
-router.post("/cancel", visaPaymentController.cancelPaymentIntent);
+router.post("/cancel",   checkAuth(Role.USER, Role.ADMIN), visaPaymentController.cancelPaymentIntent);
 
-router.post("/refund", visaPaymentController.refundPaymentIntent);
+router.post("/refund",   checkAuth(Role.ADMIN),
+visaPaymentController.refundPaymentIntent);
 
 router.get(
   "/retrieve/:paymentIntentId",
+    checkAuth(Role.USER, Role.ADMIN),
+
   visaPaymentController.retrievePaymentIntentController,
 );
 
-router.post("/webhook", visaPaymentController.stripeWebhookHandler);
 
 router.get(
   "/my-payments",
