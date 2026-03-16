@@ -69,6 +69,7 @@ interface EnvVar {
   STRIPE: STRIPE_TYPE;
   GOOGLE_AUTH: GOOGLE_TYPE;
   APPLE_AUTH: APPLE_AUTH_TYPE;
+  OPENAI_API_KEY?: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -118,6 +119,8 @@ const loadEnvVariables = (): EnvVar => {
     "APPLE_KEY_ID",
     "APPLE_PRIVATE_KEY_PATH",
     "APPLE_CALLBACK_URL",
+
+    "OPENAI_API_KEY",
   ];
   requiredEnvVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -183,6 +186,7 @@ const loadEnvVariables = (): EnvVar => {
       APPLE_PRIVATE_KEY_PATH: process.env.APPLE_PRIVATE_KEY_PATH as string,
       APPLE_CALLBACK_URL: process.env.APPLE_CALLBACK_URL as string,
     },
+    OPENAI_API_KEY:process.env.OPENAI_API_KEY as string,
   };
 };
 

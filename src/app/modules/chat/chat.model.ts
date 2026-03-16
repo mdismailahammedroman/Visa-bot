@@ -1,22 +1,5 @@
 import { Schema, model, Types } from "mongoose";
-import { ChatSender, ChatStatus, IChat } from "./chat.interface";
-
-const messageSchema = new Schema(
-  {
-    sender: {
-      type: String,
-      enum: Object.values(ChatSender),
-      required: true,
-    },
-
-    message: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-  },
-  { timestamps: true }
-);
+import { ChatStatus, IChat } from "./chat.interface";
 
 const chatSchema = new Schema<IChat>(
   {
@@ -31,25 +14,40 @@ const chatSchema = new Schema<IChat>(
       type: Types.ObjectId,
       ref: "User",
       default: null,
+      index: true,
     },
 
     status: {
       type: String,
       enum: Object.values(ChatStatus),
       default: ChatStatus.BOT,
+      index: true,
+    },
+
+    lastMessage: {
+      type: String,
+      trim: true,
+    },
+
+    lastMessageAt: {
+      type: Date,
+      index: true,
     },
 
     aiResolved: {
       type: Boolean,
       default: false,
     },
-
-    messages: {
-      type: [messageSchema],
-      default: [],
-    },
   },
   { timestamps: true }
 );
 
-export const Chat = model<IChat>("Chat", chatSchema);
+/**
+ * performance indexes
+ */
+
+chatSchema.index({ createdAt: -1 });
+
+chatSchema.index({ managerId: 1, status: 1 });
+
+export const ChatModel = model<IChat>("Chat", chatSchema);

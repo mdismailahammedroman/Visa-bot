@@ -72,23 +72,7 @@ const getMyApplicationsController = CatchAsync(
   },
 );
 
-const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
-  const user = req.user as any;
-  const userId = user._id;
-  const visaApplicationId = req.params.id;
 
-  const result = await VisaApplicationService.payVisaApplication(
-    visaApplicationId as string,
-    userId,
-  );
-
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: "Payment completed successfully",
-    data: result,
-  });
-});
 
 /* ========================= ADMIN ========================= */
 const getAllApplication = CatchAsync(async (req: Request, res: Response) => {
@@ -231,7 +215,7 @@ export const VisaApplicationController = {
   createVisaApplication,
   updateApplication,
   getMyApplicationsController,
-  payVisaApplication,
+
   getAllApplication,
   getOneApplicationForAdmin,
   assignApplication,

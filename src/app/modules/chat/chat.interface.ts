@@ -12,22 +12,35 @@ export enum ChatStatus {
   CLOSED = "CLOSED",
 }
 
-export interface IMessage {
-  sender: ChatSender;
-  message: string;
-  createdAt?: Date;
-}
-
 export interface IChat {
+  _id?: Types.ObjectId;
+
   userId: Types.ObjectId;
 
   managerId?: Types.ObjectId | null;
 
   status: ChatStatus;
 
-  messages: IMessage[];
+  lastMessage?: string;
+
+  lastMessageAt?: Date;
 
   aiResolved?: boolean;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IMessage {
+  _id?: Types.ObjectId;
+
+  chatId: Types.ObjectId;
+
+  sender: ChatSender;
+
+  message: string;
+
+  read: boolean;
 
   createdAt?: Date;
   updatedAt?: Date;

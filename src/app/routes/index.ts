@@ -7,7 +7,9 @@ import { userRouter } from "../modules/user/user.route";
 import { visaServiceRouter } from "../modules/visaService/visaService.route";
 import { visaApplicationRoute } from "../modules/visaApply/visa.route";
 import { notificationRoute } from "../modules/notification/notification.route";
-// import { chatRoute } from "../modules/chat/chat.route";
+import { visaPaymentRouter } from "../modules/visaPayment/payment.route";
+import { chatRoute } from "../modules/chat/chat.route";
+import { feedbackRoute } from "../modules/Feedback/feedback.route";
 
 export const router = Router();
 
@@ -41,10 +43,18 @@ const routes = [
     path: "/notification",
     route: notificationRoute,
   },
-  // {
-  //   path: "/chat",
-  //   route: chatRoute,
-  // },
+  {
+    path:"/payment",
+    route:visaPaymentRouter,
+  },
+  {
+    path: "/chat",
+    route: chatRoute,
+  },
+  {
+    path: "/feedback",
+    route: feedbackRoute,
+  },
 ];
 routes.forEach((route) => {
   router.use(route.path, route.route);

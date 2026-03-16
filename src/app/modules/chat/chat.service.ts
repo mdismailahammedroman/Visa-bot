@@ -1,82 +1,104 @@
-import { ChatRepository } from "./chat.repository";
-import { ChatSender } from "./chat.interface";
-import { getIo } from "../socket/socket.store";
-import { generateAIReply, getAvailableManager } from "./ai.agent";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Types } from "mongoose";
 
-const sendMessage = async (userId: string, message: string) => {
+import { ChatRepository } from "./chat.repository";
+import { ChatSender } from "./chat.interface";
+import { assignManagerToChat } from "./queue/manager.assignment";
 
+import { getIo } from "../socket/socket.store";
+import { generateAIReply } from "./AI/ai.agent";
+
+export const sendUserMessage = async (userId: string, message: string) => {
   let chat = await ChatRepository.findUserChat(userId);
 
   if (!chat) {
     chat = await ChatRepository.createChat({
       userId: new Types.ObjectId(userId),
-      messages: [],
     });
   }
 
-  // user message save
-  await ChatRepository.addMessage(chat._id.toString(), {
+  const chatId = chat._id.toString();
+
+  const userMsg = await ChatRepository.createMessage({
+    chatId: chat._id,
     sender: ChatSender.USER,
     message,
+    read: false,
   });
 
-  // AI reply generate
-  const aiReply = await generateAIReply(userId, message);
-
-  const lower = message.toLowerCase();
-
-  const needHuman =
-    lower.includes("manager") ||
-    lower.includes("agent") ||
-    lower.includes("support") ||
-    aiReply.toLowerCase().includes("manager");
-
-  // ---------------------- AI reply ----------------------
-
-  if (!needHuman) {
-
-    const updated = await ChatRepository.addMessage(chat._id.toString(), {
-      sender: ChatSender.AI,
-      message: aiReply,
-    });
-
-    return updated;
-  }
-
-  // ---------------------- Manager assignment ----------------------
-
-  let managerId;
-
-  try {
-    managerId = await getAvailableManager();
-  } catch {
-
-    await ChatRepository.addMessage(chat._id.toString(), {
-      sender: ChatSender.AI,
-      message: "Currently no manager is online. Please try again later.",
-    });
-
-    return chat;
-  }
-
-  await ChatRepository.addMessage(chat._id.toString(), {
-    sender: ChatSender.AI,
-    message: "Connecting you with a manager...",
+  await ChatRepository.updateChat(chatId, {
+    lastMessage: message,
+    lastMessageAt: new Date(),
   });
-
-  const assigned = await ChatRepository.assignManager(
-    chat._id.toString(),
-    managerId
-  );
 
   const io = getIo();
 
-  io.to(`chat_${managerId}`).emit("newChat", assigned);
+  io.to(`chat_${chatId}`).emit("new-message", userMsg);
 
-  return assigned;
-};
+  if (chat.managerId) {
+    io.to(`user_${chat.managerId}`).emit("manager-new-message", {
+      chatId,
+      message: userMsg,
+    });
 
-export const ChatService = {
-  sendMessage,
+    return userMsg;
+  }
+
+  const ai = await generateAIReply(userId, message);
+
+  if (ai.escalate) {
+    const assigned = await assignManagerToChat(chatId);
+
+    if (!assigned) {
+      const aiMsg = await ChatRepository.createMessage({
+        chatId: chat._id,
+        sender: ChatSender.AI,
+        message: "No manager available right now. Please try again later.",
+        read: false,
+      });
+
+      const io = getIo();
+
+      io.to(`chat_${chatId}`).emit("new-message", aiMsg);
+
+      return aiMsg;
+    }
+
+    const aiMsg = await ChatRepository.createMessage({
+      chatId: chat._id,
+      sender: ChatSender.AI,
+      message: "Connecting you with a manager...",
+      read: false,
+    });
+
+    await ChatRepository.updateChat(chatId, {
+      lastMessage: aiMsg.message,
+      lastMessageAt: new Date(),
+    });
+
+    io.to(`chat_${chatId}`).emit("new-message", aiMsg);
+
+    io.to(`user_${assigned.managerId}`).emit("manager-new-chat", {
+      chat: assigned.chat,
+    });
+
+    return aiMsg;
+  }
+
+  const aiMsg = await ChatRepository.createMessage({
+    chatId: chat._id,
+    sender: ChatSender.AI,
+    message: ai.reply,
+    read: false,
+  });
+
+  await ChatRepository.updateChat(chatId, {
+    lastMessage: ai.reply,
+    lastMessageAt: new Date(),
+  });
+
+  io.to(`chat_${chatId}`).emit("new-message", aiMsg);
+
+  return aiMsg;
 };

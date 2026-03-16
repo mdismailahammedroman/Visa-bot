@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from "redis";
 import { envVar } from "./EnvVar";
+import logger from "./logger";
 
 export let redisClient: RedisClientType;
 
@@ -16,8 +17,8 @@ export const connectRedis = async () => {
     },
   });
 
-  redisClient.on("connect", () => console.log("✅ Redis connected"));
-  redisClient.on("error", (err) => console.error("Redis error:", err));
+  redisClient.on("connect", () => logger.info("✅ Redis connected"));
+  redisClient.on("error", (err) => logger.error("Redis error:", err));
 
   await redisClient.connect();
   return redisClient;
@@ -27,16 +28,30 @@ export const disconnectRedis = async () => {
   if (redisClient?.isOpen) await redisClient.quit();
 };
 
-// JSON helpers
-export const setCache = async (key: string, value: unknown, ttl?: number) => {
+/**
+ * Cache Helpers
+ */
+
+export const setCache = async (
+  key: string,
+  value: unknown,
+  ttl?: number
+) => {
   const data = JSON.stringify(value);
-  if (ttl) await redisClient.set(key, data, { EX: ttl });
-  else await redisClient.set(key, data);
+
+  if (ttl) {
+    await redisClient.set(key, data, { EX: ttl });
+  } else {
+    await redisClient.set(key, data);
+  }
 };
 
 export const getCache = async <T>(key: string): Promise<T | null> => {
   const data = await redisClient.get(key);
-  return data ? (JSON.parse(data) as T) : null;
+
+  if (!data) return null;
+
+  return JSON.parse(data) as T;
 };
 
 export const deleteCache = async (key: string) => {

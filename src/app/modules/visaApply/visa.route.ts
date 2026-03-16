@@ -39,12 +39,7 @@ router.get(
   VisaApplicationController.getMyApplicationsController,
 );
 
-// Pay Visa Application
-router.post(
-  "/pay/:id",
-  checkAuth(Role.USER),
-  VisaApplicationController.payVisaApplication,
-);
+
 
 /* =====================================================
    ADMIN ROUTES

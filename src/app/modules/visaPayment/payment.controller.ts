@@ -1,35 +1,47 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { envVar } from "./../../config/EnvVar";
 import { Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
 import { CatchAsync } from "../../utils/CatchAsync";
 import { sendResponse } from "../../utils/sendResponse";
-import { visaPaymentService } from "./visaPayment.service";
+import { StatusCodes } from "http-status-codes";
+import { visaPaymentService } from "./payment.service";
 import { stripe } from "../../config/stripe";
+import { envVar } from "../../config/EnvVar";
 
-// Webhook handler
+const payVisaApplication = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+
+  const result = await visaPaymentService.payVisaApplication(
+    req.params.id as string,
+    user._id
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Payment intent created",
+    data: result,
+  });
+});
+
 const stripeWebhookHandler = CatchAsync(async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
-  const webhookSecret = envVar.STRIPE.STRIPE_WEBHOOK_SECRET;
 
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err: any) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+  const event = stripe.webhooks.constructEvent(
+    req.body,
+    sig,
+    envVar.STRIPE.STRIPE_WEBHOOK_SECRET
+  );
 
   const result = await visaPaymentService.StripeWebhookService(event);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Webhook received successfully",
+    message: "Webhook received",
     data: result,
   });
 });
 
-// Cancel Payment
 const cancelPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
   const { paymentIntentId } = req.body;
 
@@ -38,12 +50,11 @@ const cancelPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "PaymentIntent canceled successfully",
+    message: "Payment canceled",
     data: result,
   });
 });
 
-// Refund Payment
 const refundPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
   const { paymentIntentId } = req.body;
 
@@ -52,32 +63,60 @@ const refundPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "PaymentIntent refunded successfully",
+    message: "Payment refunded",
     data: result,
   });
 });
 
-// Retrieve Payment
 const retrievePaymentIntentController = CatchAsync(
   async (req: Request, res: Response) => {
-    const { paymentIntentId } = req.params;
-
     const result = await visaPaymentService.retrievePaymentIntent(
-      paymentIntentId as string,
+      req.params.paymentIntentId as string
     );
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
-      message: "PaymentIntent retrieved successfully",
+      message: "Payment retrieved",
       data: result,
     });
-  },
+  }
 );
 
+
+const myPaymentHistory = CatchAsync(async (req: Request, res: Response) => {
+
+  const user = req.user as any;
+
+  const result = await visaPaymentService.getMyPaymentHistory(user._id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "My payment history retrieved successfully",
+    data: result,
+  });
+});
+
+
+const allPayments = CatchAsync(async (req: Request, res: Response) => {
+
+  const result = await visaPaymentService.getAllPayments();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "All payments retrieved successfully",
+    data: result,
+  });
+});
+
 export const visaPaymentController = {
+  payVisaApplication,
   stripeWebhookHandler,
   cancelPaymentIntent,
   refundPaymentIntent,
   retrievePaymentIntentController,
+    myPaymentHistory,
+  allPayments,
 };
