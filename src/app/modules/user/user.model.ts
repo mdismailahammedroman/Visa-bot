@@ -3,10 +3,8 @@ import {
   GENDER_TYPE,
   IAuthProvider,
   IUser,
-
   Role,
   UserStatus,
-
 } from "./user.interface";
 
 /* ---------------- Auth Provider Sub Schema ---------------- */
@@ -57,11 +55,21 @@ const userSchema = new Schema<IUser>(
     mobile: { type: String, default: "" },
     location: { type: String, default: "" },
 
-
     coordinate: {
       type: { type: String, default: "Point" },
       coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
       placeName: { type: String },
+    },
+
+    notificationSettings: {
+      push: {
+        type: Boolean,
+        default: true,
+      },
+      email: {
+        type: Boolean,
+        default: true,
+      },
     },
     lastLoginAt: { type: Date, default: null },
     auth_providers: { type: [authProviderSchema], default: [] },

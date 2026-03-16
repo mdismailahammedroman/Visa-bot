@@ -197,6 +197,33 @@ const saveFCMToken = async (userId: string, fcmToken: string) => {
   return fcmTokens;
 };
 
+// 🔔 Push toggle
+const togglePush = async (userId: string, enabled: boolean) => {
+  const user = await userRepository.findById(userId);
+  if (!user) throw new AppError(404, "User not found");
+
+  return userRepository.updateUser(userId, {
+    notificationSettings: {
+      ...user.notificationSettings,
+      push: enabled,
+    },
+  });
+};
+
+
+// 📧 Email toggle
+const toggleEmail = async (userId: string, enabled: boolean) => {
+  const user = await userRepository.findById(userId);
+  if (!user) throw new AppError(404, "User not found");
+
+  return userRepository.updateUser(userId, {
+    notificationSettings: {
+      ...user.notificationSettings,
+      email: enabled,
+    },
+  });
+};
+
 // export user services
 export const userService = {
   registerUser,
@@ -208,4 +235,6 @@ export const userService = {
   changeUserRole,
   deleteMyAccount,
   saveFCMToken,
+  toggleEmail,
+  togglePush,
 };

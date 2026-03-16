@@ -66,6 +66,19 @@ router.delete(
   userController.deleteMyAccount,
 );
 
+// 🔔 Push Notification Toggle
+router.patch(
+  "/notification/push",
+  checkAuth(...Object.values(Role)),
+  userController.togglePushNotification
+);
+
+// 📧 Email Notification Toggle
+router.patch(
+  "/notification/email",
+  checkAuth(...Object.values(Role)),
+  userController.toggleEmailNotification
+);
 
 
 export const userRouter = router;

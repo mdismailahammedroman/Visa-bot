@@ -11,25 +11,41 @@ const sendNotification = async (payload: {
   type?: string;
   metadata?: Record<string, any>;
 }) => {
-  // 1️⃣ Save notification to DB
+
+  // 1️⃣ Save DB
   const notification = await NotificationRepository.createNotification(payload);
 
-  // 2️⃣ Emit Socket.io notification
+  // 2️⃣ Realtime socket
   const io = getIo();
   io.to(`notification_${payload.userId}`).emit("notification", notification);
 
-  // 3️⃣ Fetch device tokens from user
+  // 3️⃣ Get user
   const user = await userRepository.findById(payload.userId);
-  const deviceTokens = user?.fcmTokens || [];
+  if (!user) return notification;
 
-  // 4️⃣ Send push notification via FCM if tokens exist
-  if (deviceTokens.length) {
-    await sendPushToTokens(
-      deviceTokens,
-      payload.title,
-      payload.message,
-      payload.metadata,
-    );
+  // ===============================
+  // 🔔 PUSH NOTIFICATION CHECK
+  // ===============================
+  if (user.notificationSettings?.push) {
+
+    const tokens = user.fcmTokens || [];
+
+    if (tokens.length) {
+      await sendPushToTokens(
+        tokens,
+        payload.title,
+        payload.message,
+        payload.metadata
+      );
+    }
+  }
+
+  // ===============================
+  // 📧 EMAIL NOTIFICATION CHECK
+  // ===============================
+  if (user.notificationSettings?.email) {
+    console.log("📧 Sending email...");
+    // 👉 এখানে তোমার sendEmail function call করবে
   }
 
   return notification;

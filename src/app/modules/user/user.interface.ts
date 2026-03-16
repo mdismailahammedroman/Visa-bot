@@ -39,6 +39,11 @@ export interface ICoord {
   long?: number; // Longitude (for backward compatibility)
 }
 
+export interface INotificationSettings {
+  push: boolean;
+  email: boolean;
+}
+
 export interface IUser {
   _id: string;
   name: string;
@@ -55,6 +60,8 @@ export interface IUser {
   profile_picture?: string;
   coverPicture?: string;
   coordinate: ICoord;
+
+  notificationSettings: INotificationSettings;
 
   lastLoginAt?: Date;
 
@@ -83,7 +90,7 @@ export type TUpdateUserProfile = {
   coverPicture?: string;
   gender?: GENDER_TYPE;
   mobile?: string;
-
+  notificationSettings: INotificationSettings;
   location?: string;
   lastLoginAt?: Date;
   status?: UserStatus;
