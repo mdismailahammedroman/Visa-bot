@@ -6,6 +6,7 @@ import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
+import { ActivityLogService } from "../activity/activityLog.service";
 
 /// Helper function to normalize and validate slugs
 const normalizeSlug = (value: string): string => {
@@ -26,60 +27,78 @@ const normalizeEnum = (val: string, enumObj: any) => {
 };
 
 const createVisaServiceForCountry = async (countryId: string, payload: any) => {
-  const country = await CountryRepository.findById(countryId);
-  if (!country) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
+  try {
+    const country = await CountryRepository.findById(countryId);
+    if (!country) throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
 
-  // slug, enum normalization, totalFee etc (তোমার আগের logic)
-  if (!payload.slug) {
-    if (!payload.serviceName)
-      throw new AppError(StatusCodes.BAD_REQUEST, "serviceName is required");
-    payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
-      payload.serviceName,
-    )}`;
-  } else payload.slug = normalizeSlug(payload.slug);
+    if (!payload.slug) {
+      if (!payload.serviceName)
+        throw new AppError(StatusCodes.BAD_REQUEST, "serviceName is required");
 
-  if (payload.visaCategories)
-    payload.visaCategories = normalizeEnum(
-      payload.visaCategories,
-      VisaCategoryEnum,
+      payload.slug = `${normalizeSlug(country.countryName)}-${normalizeSlug(
+        payload.serviceName,
+      )}`;
+    } else payload.slug = normalizeSlug(payload.slug);
+
+    if (payload.visaCategories)
+      payload.visaCategories = normalizeEnum(payload.visaCategories, VisaCategoryEnum);
+
+    if (payload.visaType)
+      payload.visaType = normalizeEnum(payload.visaType, VisaTypeEnum);
+
+    if (payload.visaFee !== undefined && payload.serviceFee !== undefined)
+      payload.totalFee = payload.visaFee + payload.serviceFee;
+
+    const existing = await VisaServiceRepository.findBySlugAndCountry(
+      payload.slug,
+      countryId,
     );
 
-  if (payload.visaType)
-    payload.visaType = normalizeEnum(payload.visaType, VisaTypeEnum);
+    if (existing)
+      throw new AppError(StatusCodes.CONFLICT, "Slug already exists");
 
-  if (payload.visaFee !== undefined && payload.serviceFee !== undefined)
-    payload.totalFee = payload.visaFee + payload.serviceFee;
+    const result = await VisaServiceRepository.create({ ...payload, countryId });
 
-  // duplicate check
-  const existing = await VisaServiceRepository.findBySlugAndCountry(
-    payload.slug,
-    countryId,
-  );
-  if (existing)
-    throw new AppError(
-      StatusCodes.CONFLICT,
-      "This slug already exists in this country",
-    );
+    // 🔔 Notification
+    await NotificationService.sendNotification({
+      userId: payload.createdBy,
+      title: "New Visa Service Added",
+      message: `${payload.serviceName} added for ${country.countryName}`,
+    });
 
-  // create service
-  const result = await VisaServiceRepository.create({ ...payload, countryId });
+    // 📜 Activity Log
+    await ActivityLogService.logActivity({
+      actorId: payload.createdBy,
+      actorRole: "ADMIN",
+      action: "CREATE",
+      entityType: "VISA_SERVICE",
+      entityId: result._id,
+      message: `${payload.serviceName} created`,
+      status: "SUCCESS",
+      after: result,
+    });
 
-  /**
-   * 🔔 Notification Trigger
-   */
-  await NotificationService.sendNotification({
-    userId: payload.createdBy, // or adminId / system user
-    title: "New Visa Service Added",
-    message: `${payload.serviceName} service added for ${country.countryName}`,
-    type: "SYSTEM_UPDATE",
-    metadata: {
+    // 🪵 Winston log
+    logger.info("Visa service created", {
       serviceId: result._id,
       countryId,
-      serviceName: payload.serviceName,
-    },
-  });
+    });
 
-  return result;
+    return result;
+  } catch (error: any) {
+    logger.error("Create visa service failed", { error: error.message });
+
+    await ActivityLogService.logActivity({
+      actorId: payload.createdBy,
+      actorRole: "ADMIN",
+      action: "CREATE",
+      entityType: "VISA_SERVICE",
+      message: error.message,
+      status: "FAILED",
+    });
+
+    throw error;
+  }
 };
 
 const updateVisaService = async (id: string, payload: any) => {
@@ -105,6 +124,8 @@ const updateVisaService = async (id: string, payload: any) => {
   }
 
   return await VisaServiceRepository.updateById(id, payload);
+
+  
 };
 
 const updateStatus = async (id: string, isActive: boolean) => {
