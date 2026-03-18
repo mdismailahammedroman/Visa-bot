@@ -63,6 +63,8 @@ export interface IUser {
 
   notificationSettings: INotificationSettings;
 
+currency?: string;
+
   lastLoginAt?: Date;
 
   auth_providers: IAuthProvider[];
@@ -88,6 +90,7 @@ export type TUpdateUserProfile = {
   password?: string;
   isDeleted?: boolean;
   coverPicture?: string;
+  currency?: string;
   gender?: GENDER_TYPE;
   mobile?: string;
   notificationSettings: INotificationSettings;

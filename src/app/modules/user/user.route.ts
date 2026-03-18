@@ -47,6 +47,11 @@ router.get(
 
 // ✅ Change user status (BLOCK, ACTIVE, SUSPENDED)
 router.patch(
+  "/update-currency",
+  checkAuth(...Object.values(Role)),
+  userController.updateCurrency,
+);
+router.patch(
   "/status/:userId",
   checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
   userController.setUserStatus,

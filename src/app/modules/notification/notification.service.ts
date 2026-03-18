@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { sendNotificationEmail } from "../../utils/mail/mailer";
 import { sendPushToTokens } from "../../utils/sendPushNotification";
 import { getIo } from "../socket/socket.store";
 import { userRepository } from "../user/user.repository";
@@ -11,7 +12,6 @@ const sendNotification = async (payload: {
   type?: string;
   metadata?: Record<string, any>;
 }) => {
-
   // 1️⃣ Save DB
   const notification = await NotificationRepository.createNotification(payload);
 
@@ -27,7 +27,6 @@ const sendNotification = async (payload: {
   // 🔔 PUSH NOTIFICATION CHECK
   // ===============================
   if (user.notificationSettings?.push) {
-
     const tokens = user.fcmTokens || [];
 
     if (tokens.length) {
@@ -35,7 +34,7 @@ const sendNotification = async (payload: {
         tokens,
         payload.title,
         payload.message,
-        payload.metadata
+        payload.metadata,
       );
     }
   }
@@ -44,13 +43,16 @@ const sendNotification = async (payload: {
   // 📧 EMAIL NOTIFICATION CHECK
   // ===============================
   if (user.notificationSettings?.email) {
-    console.log("📧 Sending email...");
-    // 👉 এখানে তোমার sendEmail function call করবে
+    await sendNotificationEmail({
+      to: user.email,
+      name: user.name,
+      title: payload.title,
+      message: payload.message,
+    });
   }
 
   return notification;
 };
-
 
 const getMyNotifications = async (
   userId: string,

@@ -71,6 +71,12 @@ const userSchema = new Schema<IUser>(
         default: true,
       },
     },
+
+currency: { 
+  type: String, 
+  enum: ["USD", "EUR", "BDT"], 
+  default: "USD" 
+},
     lastLoginAt: { type: Date, default: null },
     auth_providers: { type: [authProviderSchema], default: [] },
     fcmTokens: { type: [String], default: [] },

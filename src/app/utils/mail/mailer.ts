@@ -64,6 +64,37 @@ export const sendOtpEmail = async ({
   }
 };
 
+export const sendNotificationEmail = async ({
+  to,
+  name,
+  title,
+  message,
+}: {
+  to: string;
+  name: string;
+  title: string;
+  message: string;
+}) => {
+  try {
+    const html = renderTemplate("notification", {
+      name,
+      title,
+      message,
+      appName: "VisaBot",
+      year: new Date().getFullYear(),
+    });
+
+    await transporter.sendMail({
+      from: `"${envVar.SMTP.SMTP_FROM_NAME}" <${envVar.SMTP.SMTP_FROM_EMAIL}>`,
+      to,
+      subject: title,
+      html,
+    });
+  } catch (error) {
+    console.error("❌ Notification email failed:", error);
+  }
+};
+
 // after domain buy set this code
 // import { SendEmailCommand } from "@aws-sdk/client-ses";
 

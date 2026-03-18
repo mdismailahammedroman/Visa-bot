@@ -205,6 +205,28 @@ const toggleEmailNotification = CatchAsync(async (req, res) => {
   });
 });
 
+
+const updateCurrency = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  const { currency } = req.body;
+
+  if (!currency) {
+    throw new AppError(400, "Currency is required");
+  }
+
+  const updatedUser = await userService.updateUser(user._id, {
+    currency, // ✅ MUST BE OBJECT
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Currency updated successfully",
+    data: updatedUser,
+  });
+});
+
+
 // userController/
 
 export const userController = {
@@ -219,4 +241,5 @@ export const userController = {
   storeFCMToken,
   togglePushNotification,
   toggleEmailNotification,
+  updateCurrency,
 };

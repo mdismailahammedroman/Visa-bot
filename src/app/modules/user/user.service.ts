@@ -224,6 +224,7 @@ const toggleEmail = async (userId: string, enabled: boolean) => {
   });
 };
 
+
 // export user services
 export const userService = {
   registerUser,
