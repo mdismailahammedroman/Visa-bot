@@ -5,6 +5,9 @@ import { PaymentRepository } from "./payment.repository";
 import { PaymentStatus } from "./payment.interface";
 import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
+import { getUserCurrency } from "../../utils/userCurrency";
+import { getCurrencyRate } from "../../utils/fixer";
+
 
 const payVisaApplication = async (applicationId: string, userId: string) => {
   const application = await VisaApplicationRepository.findById(applicationId);
@@ -18,13 +21,23 @@ const payVisaApplication = async (applicationId: string, userId: string) => {
   if (!application.totalFee)
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid amount");
 
+  const userCurrency = await getUserCurrency(userId);
+
+  // 🔥 ONE RATE FETCH
+  const rate = (await getCurrencyRate(userCurrency)) ?? 1;
+
+  // 🔥 convert manually (same pattern as service)
+  const convertedAmount =
+    userCurrency === "USD"
+      ? application.totalFee
+      : application.totalFee * rate;
+
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(application.totalFee * 100),
-    currency: "usd",
+    amount: Math.round(convertedAmount * 100),
+    currency: userCurrency.toLowerCase(),
     metadata: {
-      applicationId: applicationId.toString(),
-      userId: userId.toString(),
-      module: "visa_payment",
+      applicationId,
+      userId,
     },
   });
 
@@ -32,8 +45,8 @@ const payVisaApplication = async (applicationId: string, userId: string) => {
     applicationId,
     userId,
     paymentIntentId: paymentIntent.id,
-    amount: application.totalFee,
-    currency: "usd",
+    amount: Number(convertedAmount.toFixed(2)),
+    currency: userCurrency,
     status: PaymentStatus.PENDING,
   });
 

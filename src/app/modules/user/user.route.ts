@@ -34,7 +34,7 @@ router.get(
 // ✅ Get all users (admin/manager)
 router.get(
   "/all-users",
-  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER, Role.USER),
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER, ),
   userController.getAllUsers,
 );
 
@@ -46,6 +46,11 @@ router.get(
 );
 
 // ✅ Change user status (BLOCK, ACTIVE, SUSPENDED)
+router.patch(
+  "/update-currency",
+  checkAuth(...Object.values(Role)),
+  userController.updateCurrency,
+);
 router.patch(
   "/status/:userId",
   checkAuth(Role.ADMIN, Role.MAIN_MANAGER),
@@ -66,6 +71,19 @@ router.delete(
   userController.deleteMyAccount,
 );
 
+// 🔔 Push Notification Toggle
+router.patch(
+  "/notification/push",
+  checkAuth(...Object.values(Role)),
+  userController.togglePushNotification
+);
+
+// 📧 Email Notification Toggle
+router.patch(
+  "/notification/email",
+  checkAuth(...Object.values(Role)),
+  userController.toggleEmailNotification
+);
 
 
 export const userRouter = router;

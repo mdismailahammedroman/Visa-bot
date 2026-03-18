@@ -11,23 +11,28 @@ import { QueryBuilder } from "../../utils/queryBuilder";
 import { Types } from "mongoose";
 import { userRepository } from "../user/user.repository";
 import { Role } from "../user/user.interface";
+import { NotificationService } from "../notification/notification.service";
+import {  convertToUSD } from "../../utils/currency";
+import { getUserCurrency } from "../../utils/userCurrency";
+import { getCurrencyRate } from "../../utils/fixer";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
   const applyVisaServices = await VisaServiceRepository.findById(
-    payload.visaServiceId.toString(),
+    payload.visaServiceId.toString()
   );
-  if (!applyVisaServices) throw new Error("Visa Service not found");
 
-  // 🔎 Check previous application for same user + service
+  if (!applyVisaServices)
+    throw new AppError(StatusCodes.NOT_FOUND, "Visa Service not found");
+
   const activeApplication =
     await VisaApplicationRepository.findActiveApplication(
       payload.userId.toString(),
-      payload.visaServiceId.toString(),
+      payload.visaServiceId.toString()
     );
 
   if (activeApplication) {
     throw new Error(
-      "You already have a pending or processing visa application.",
+      "You already have a pending or processing visa application."
     );
   }
 
@@ -38,11 +43,18 @@ const createVisaApplication = async (payload: IVisaApplication) => {
   payload.serviceFee = serviceFee;
   payload.totalFee = visaFee + serviceFee;
 
-  const application = await VisaApplicationRepository.create(payload);
+  // 🔥 USER CURRENCY
+  const userCurrency = await getUserCurrency(payload.userId.toString());
 
+  // 🔥 convert income → USD
+  if (payload.monthlyIncome) {
+    payload.monthlyIncome = await convertToUSD(
+      payload.monthlyIncome,
+      userCurrency
+    );
+  }
 
-
-  return application;
+  return await VisaApplicationRepository.create(payload);
 };
 
 const updateApplication = async (
@@ -57,23 +69,66 @@ const updateApplication = async (
 };
 
 const getMyApplications = async (userId: string, queryParams: any) => {
-  // QueryBuilder ব্যবহার করলে pagination, filtering, sorting, search সব handle হয়
+  const userCurrency = await getUserCurrency(userId);
+
+  // 🔥 ONLY ONE RATE FETCH (SAFE)
+  const rate = (await getCurrencyRate(userCurrency)) ?? 1;
+
   const query = new QueryBuilder(
     VisaApplicationRepository.findAll()
-      .find({ userId }) // 🔹 শুধু ওই user এর applications
+      .find({ userId })
       .populate("visaServiceId")
       .populate("countryId")
       .populate("assignedTo", "name email role"),
-    queryParams,
+    queryParams
   )
-    .search(["status", "visaType"]) // search by status, visaType etc
+    .search(["status", "visaType"])
     .filter()
     .sort()
     .paginate()
     .fields();
 
   const result = await query.build();
-  return result;
+
+  const convert = (amount: number) => {
+    if (!amount) return 0;
+    if (userCurrency === "USD") return amount;
+
+    return Number((amount * rate).toFixed(2)); // 🔥 rounding added
+  };
+
+  const convertedData = result.data.map((app: any) => {
+    let visaService = app.visaServiceId;
+
+    if (visaService) {
+      visaService = {
+        ...visaService.toObject(),
+        visaFee: convert(visaService.visaFee),
+        serviceFee: convert(visaService.serviceFee),
+        totalFee: convert(visaService.totalFee),
+        currency: userCurrency,
+      };
+    }
+
+    return {
+      ...app.toObject(),
+
+      visaFee: convert(app.visaFee),
+      serviceFee: convert(app.serviceFee),
+      totalFee: convert(app.totalFee),
+
+      monthlyIncome: convert(app.monthlyIncome),
+
+      visaServiceId: visaService,
+
+      currency: userCurrency,
+    };
+  });
+
+  return {
+    data: convertedData,
+    meta: result.meta,
+  };
 };
 
 const getAllApplication = async (queryParams: any) => {
@@ -106,7 +161,7 @@ const getOneForManager = async (id: string) => {
 };
 
 const updateStatus = async (id: string, status: ApplicationStatus) => {
-  // optional runtime validation
+  // ✅ Validate status
   if (!Object.values(ApplicationStatus).includes(status)) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status value");
   }
@@ -123,6 +178,20 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
   }
 
+  // 🔔 Send notification to assigned manager (if assigned)
+  if (application.assignedTo) {
+    try {
+      await NotificationService.sendNotification({
+        userId: application.assignedTo.toString(),
+        title: "Visa Application Status Updated",
+        message: `Application #${application._id} status updated to ${status}`,
+        type: "APPLICATION_STATUS_UPDATE",
+        metadata: { applicationId: application._id, newStatus: status },
+      });
+    } catch (err) {
+      console.error("Failed to send status update notification:", err);
+    }
+  }
 
   return updated;
 };
@@ -194,6 +263,13 @@ const assignApplication = async (
   await application.save();
 
   // 🔔 Notify manager
+  await NotificationService.sendNotification({
+  userId: managerId,
+  title: "New Application Assigned",
+  message: `You have been assigned application #${applicationId}`,
+  type: "APPLICATION_ASSIGNMENT",
+  metadata: { applicationId }
+});
 
   return await VisaApplicationRepository.findByIdWithPopulate(applicationId);
 };

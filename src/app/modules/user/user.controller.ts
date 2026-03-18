@@ -13,7 +13,6 @@ const registerUser = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = await userService.registerUser(req.body);
 
-    
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
       success: true,
@@ -177,6 +176,57 @@ const storeFCMToken = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// 🔔 Push ON/OFF
+const togglePushNotification = CatchAsync(async (req, res) => {
+  const user = req.user as any;
+  const { enabled } = req.body;
+
+  const result = await userService.togglePush(user._id, enabled);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: `Push notification ${enabled ? "enabled" : "disabled"}`,
+    data: result,
+  });
+});
+
+const toggleEmailNotification = CatchAsync(async (req, res) => {
+  const user = req.user as any;
+  const { enabled } = req.body;
+
+  const result = await userService.toggleEmail(user._id, enabled);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: `Email notification ${enabled ? "enabled" : "disabled"}`,
+    data: result,
+  });
+});
+
+
+const updateCurrency = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  const { currency } = req.body;
+
+  if (!currency) {
+    throw new AppError(400, "Currency is required");
+  }
+
+  const updatedUser = await userService.updateUser(user._id, {
+    currency, // ✅ MUST BE OBJECT
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Currency updated successfully",
+    data: updatedUser,
+  });
+});
+
+
 // userController/
 
 export const userController = {
@@ -189,4 +239,7 @@ export const userController = {
   getUserProfileByIdForAdmin,
   deleteMyAccount,
   storeFCMToken,
+  togglePushNotification,
+  toggleEmailNotification,
+  updateCurrency,
 };

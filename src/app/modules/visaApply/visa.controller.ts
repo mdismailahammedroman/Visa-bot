@@ -54,22 +54,21 @@ const updateApplication = CatchAsync(async (req: Request, res: Response) => {
 
 const getMyApplicationsController = CatchAsync(
   async (req: Request, res: Response) => {
-    const user = req.user as any; // logged-in user
-    const userId = user._id;
+    const user = req.user as any;
 
     const result = await VisaApplicationService.getMyApplications(
-      userId,
-      req.query,
+      user._id,
+      req.query
     );
 
-    return sendResponse(res, {
-      statusCode: StatusCodes.OK,
+    sendResponse(res, {
+      statusCode: 200,
       success: true,
       message: "User applications retrieved successfully",
       data: result.data,
       meta: result.meta,
     });
-  },
+  }
 );
 
 

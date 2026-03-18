@@ -176,14 +176,12 @@ const deleteMyAccount = async (userId: string) => {
   return null;
 };
 
-
 const saveFCMToken = async (userId: string, fcmToken: string) => {
   const user = await userRepository.findById(userId);
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
   }
-
 
   const fcmTokens = user.fcmTokens || [];
 
@@ -192,12 +190,38 @@ const saveFCMToken = async (userId: string, fcmToken: string) => {
     fcmTokens.push(fcmToken);
   }
 
-  await userRepository.updateUser(
-    userId,
-    { fcmTokens } as unknown as Partial<TUpdateUserProfile>,
-  );
+  await userRepository.updateUser(userId, {
+    fcmTokens,
+  } as unknown as Partial<TUpdateUserProfile>);
 
   return fcmTokens;
+};
+
+// 🔔 Push toggle
+const togglePush = async (userId: string, enabled: boolean) => {
+  const user = await userRepository.findById(userId);
+  if (!user) throw new AppError(404, "User not found");
+
+  return userRepository.updateUser(userId, {
+    notificationSettings: {
+      ...user.notificationSettings,
+      push: enabled,
+    },
+  });
+};
+
+
+// 📧 Email toggle
+const toggleEmail = async (userId: string, enabled: boolean) => {
+  const user = await userRepository.findById(userId);
+  if (!user) throw new AppError(404, "User not found");
+
+  return userRepository.updateUser(userId, {
+    notificationSettings: {
+      ...user.notificationSettings,
+      email: enabled,
+    },
+  });
 };
 
 
@@ -212,4 +236,6 @@ export const userService = {
   changeUserRole,
   deleteMyAccount,
   saveFCMToken,
+  toggleEmail,
+  togglePush,
 };

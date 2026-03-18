@@ -17,10 +17,15 @@ import { requestLogger } from "./app/middlewares/requestLogger";
 
 const app: Application = express();
 
+
+
+
 /* =================================
    1️⃣ Security Headers
 ================================= */
 app.use(helmet());
+
+
 
 /* =================================
    2️⃣ Compression

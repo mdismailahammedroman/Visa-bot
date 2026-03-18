@@ -2,8 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
 import { ICountry } from "./country.interface";
 import { CountryRepository } from "./country.repository";
-import { getCurrencyRate } from "../../utils/fixer";
+
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
+import { getCurrencyRate } from "../../utils/fixer";
 
 const createCountry = async (payload: ICountry) => {
   payload.isoCode = payload.isoCode.toUpperCase().trim();

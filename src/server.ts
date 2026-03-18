@@ -38,7 +38,7 @@ async function bootstrap() {
   // await seedSuperAdmin();
 
 server.listen(envVar.PORT, () => {
-  logger.info("🚀 Server started", {
+  logger.info(`🚀 Server started ${envVar.PORT}`, {
     port: envVar.PORT,
     env: process.env.NODE_ENV,
   });

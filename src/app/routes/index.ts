@@ -10,6 +10,7 @@ import { notificationRoute } from "../modules/notification/notification.route";
 import { visaPaymentRouter } from "../modules/visaPayment/payment.route";
 import { chatRoute } from "../modules/chat/chat.route";
 import { feedbackRoute } from "../modules/Feedback/feedback.route";
+import { newsletterRouter } from "../modules/newsletter/newsletter.route";
 
 export const router = Router();
 
@@ -54,6 +55,10 @@ const routes = [
   {
     path: "/feedback",
     route: feedbackRoute,
+  },
+  {
+    path: "/newsletter",
+    route: newsletterRouter ,
   },
 ];
 routes.forEach((route) => {
