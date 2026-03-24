@@ -32,14 +32,14 @@ const payVisaApplication = async (applicationId: string, userId: string) => {
       ? application.totalFee
       : application.totalFee * rate;
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(convertedAmount * 100),
-    currency: userCurrency.toLowerCase(),
-    metadata: {
-      applicationId,
-      userId,
-    },
-  });
+const paymentIntent = await stripe.paymentIntents.create({
+  amount: Math.round(convertedAmount * 100),
+  currency: userCurrency.toLowerCase(),
+  metadata: {
+    applicationId: applicationId.toString(), // ✅ FIX
+    userId: userId.toString(),               // ✅ FIX
+  },
+});
 
   await PaymentRepository.createPayment({
     applicationId,
