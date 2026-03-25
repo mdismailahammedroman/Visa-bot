@@ -6,6 +6,7 @@ import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { QueryBuilder, QueryParams } from "../../utils/queryBuilder";
 import { VisaCategoryEnum, VisaTypeEnum } from "./visaService.interface";
+import { ActivityLogService } from "../activity/activityLog.service";
 
 /// Helper function to normalize and validate slugs
 const normalizeSlug = (value: string): string => {
@@ -79,6 +80,16 @@ const createVisaServiceForCountry = async (countryId: string, payload: any) => {
     },
   });
 
+  await ActivityLogService.logActivity({
+  actorId: payload.createdBy,
+  actorRole: "ADMIN", // or MANAGER
+  action: "CREATE",
+  entityType: "VISA_SERVICE",
+  entityId: result._id,
+  message: `${payload.serviceName} visa service created for ${country.countryName}`,
+  status: "SUCCESS",
+});
+
   return result;
 };
 
@@ -105,6 +116,7 @@ const updateVisaService = async (id: string, payload: any) => {
   }
 
   return await VisaServiceRepository.updateById(id, payload);
+  
 };
 
 const updateStatus = async (id: string, isActive: boolean) => {
