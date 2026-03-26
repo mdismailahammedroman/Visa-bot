@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ActivityLogRepository } from "./activityLog.repository";
 import { IActivityLog } from "./activityLog.interface";
+import logger from "../../config/logger";
 
   // Generic helper to create log
-  const logActivity= async (payload: Partial<IActivityLog>) => {
-    return await ActivityLogRepository.create(payload);
-  }
+const logActivity = async (payload: Partial<IActivityLog>) => {
+  // 🔥 NON-BLOCKING
+  ActivityLogRepository.create(payload).catch((err) =>
+    logger.error("Activity log failed", { error: err.message })
+  );
+};
 
   // Get paginated logs with optional query filters
   const getActivityLogs= async (query: any) => {

@@ -76,7 +76,7 @@ export const sendNotificationEmail = async ({
   message: string;
 }) => {
   try {
-    const html = renderTemplate("notification", {
+    const html = renderTemplate("otp", {
       name,
       title,
       message,

@@ -7,7 +7,7 @@ import { envVar } from "./EnvVar";
 export const connectDB = async (): Promise<void> => {
   try {
     await mongoose.connect(envVar.MONGODB_URL);
-    logger.info("MongoDB connected", {
+    logger.info("✅ MongoDB connected", {
       db: mongoose.connection.name,
       host: mongoose.connection.host,
     });
