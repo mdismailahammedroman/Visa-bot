@@ -11,6 +11,7 @@ import { visaPaymentRouter } from "../modules/visaPayment/payment.route";
 import { chatRoute } from "../modules/chat/chat.route";
 import { feedbackRoute } from "../modules/Feedback/feedback.route";
 import { newsletterRouter } from "../modules/newsletter/newsletter.route";
+import { activityLogRoute } from "../modules/activity/activityLog.route";
 
 export const router = Router();
 
@@ -59,6 +60,10 @@ const routes = [
   {
     path: "/newsletter",
     route: newsletterRouter ,
+  },
+  {
+    path: "/activitylogs",
+    route: activityLogRoute ,
   },
 ];
 routes.forEach((route) => {

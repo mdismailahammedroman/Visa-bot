@@ -80,15 +80,25 @@ const createVisaServiceForCountry = async (countryId: string, payload: any) => {
     },
   });
 
-  await ActivityLogService.logActivity({
-  actorId: payload.createdBy,
-  actorRole: "ADMIN", // or MANAGER
-  action: "CREATE",
-  entityType: "VISA_SERVICE",
-  entityId: result._id,
-  message: `${payload.serviceName} visa service created for ${country.countryName}`,
-  status: "SUCCESS",
-});
+  // --- Parallel ActivityLog + Notification ---
+  await Promise.all([
+    NotificationService.sendNotification({
+      userId: payload.createdBy,
+      title: "New Visa Service Added",
+      message: `${payload.serviceName} service added for ${country.countryName}`,
+      type: "SYSTEM_UPDATE",
+      metadata: { serviceId: result._id, countryId, serviceName: payload.serviceName },
+    }),
+    ActivityLogService.logActivity({
+      actorId: payload.createdBy,
+      actorRole: "ADMIN",
+      action: "CREATE_VISA_SERVICE",
+      entityType: "VisaService",
+      entityId: result._id,
+      message: `${payload.serviceName} visa service created for ${country.countryName}`,
+      after: result,
+    }),
+  ]);
 
   return result;
 };
