@@ -29,7 +29,20 @@ export class QueryBuilder<T> {
     }
     return this;
   }
+// Add this method inside QueryBuilder class
+searchEnum(enumFields: string[], searchValue: string) {
+  if (searchValue) {
+    const regex = new RegExp(searchValue, "i"); // case-insensitive
+    const orConditions = enumFields.map((field) => ({ [field]: regex }));
 
+    if (this.query.getQuery().$or) {
+      this.query = this.query.find({ $or: [...this.query.getQuery().$or, ...orConditions] });
+    } else {
+      this.query = this.query.find({ $or: orConditions });
+    }
+  }
+  return this;
+}
   filter() {
     const filters = { ...this.params };
     const exclude = ["search", "page", "limit", "sort", "fields"];

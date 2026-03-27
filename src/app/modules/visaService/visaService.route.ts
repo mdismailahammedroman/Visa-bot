@@ -78,8 +78,15 @@ router.patch(
 /**
  * Delete service
  */
+router.delete(
+  "/visa-services/:id",
+  checkAuth(Role.ADMIN,Role.MAIN_MANAGER),
+  VisaServiceController.delete
+);
+
+
 router.get(
-  "/visa-services/search/:countryId",
+  "/visa-services/search",
   checkAuth(...Object.values(Role)),
   VisaServiceController.searchVisaServicesController
 );
