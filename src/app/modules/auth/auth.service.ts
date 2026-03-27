@@ -5,6 +5,9 @@ import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { redisClient } from "../../config/redis.config";
 import { otpService } from "../Otp/otp.service";
+import { NotificationService } from "../notification/notification.service";
+import { ActivityLogService } from "../activity/activityLog.service";
+import { Types } from "mongoose";
 
 /**
  * STEP 1: Forgot Password (Send OTP)
@@ -12,8 +15,7 @@ import { otpService } from "../Otp/otp.service";
 const forgotPassword = async (email: string) => {
   const user = await userRepository.findByEmail(email);
 
-  if (!user)
-    throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
+  if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
 
   if (!user.is_verified)
     throw new AppError(StatusCodes.BAD_REQUEST, "User is not verified");
@@ -26,13 +28,31 @@ const forgotPassword = async (email: string) => {
   if (otpCooldown) {
     throw new AppError(
       StatusCodes.TOO_MANY_REQUESTS,
-      "OTP already sent. Try again later"
+      "OTP already sent. Try again later",
     );
   }
 
   await redisClient.set(`forgot-password:${email}`, "true", { EX: 60 });
 
   await otpService.sendOtp(email, "FORGOT_PASSWORD", user.name);
+
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(user._id),
+      actorRole: user.role,
+      action: "FORGOT_PASSWORD",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(user._id),
+      message: `${user.email} requested password reset OTP`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "Password Reset Request",
+      message: "OTP has been sent to your email for password reset.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
 
   return { message: "OTP sent successfully" };
 };
@@ -43,8 +63,7 @@ const forgotPassword = async (email: string) => {
 const verifyOTPForPassword = async (email: string, otp: string) => {
   const user = await userRepository.findByEmail(email);
 
-  if (!user)
-    throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
+  if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
 
   await otpService.verifyOTP({
     email,
@@ -54,6 +73,25 @@ const verifyOTPForPassword = async (email: string, otp: string) => {
 
   // mark OTP verified for 5 min
   await redisClient.set(`otp-verified:${email}`, "true", { EX: 300 });
+
+  // 🔥 ACTIVITY + NOTIFICATION
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(user._id),
+      actorRole: user.role,
+      action: "VERIFY_OTP",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(user._id),
+      message: `${user.email} successfully verified OTP for password reset`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "OTP Verified",
+      message: "You have successfully verified your OTP.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
 
   return { message: "OTP verified successfully" };
 };
@@ -65,41 +103,58 @@ const resetPassword = async (email: string, newPassword: string) => {
   const isOtpVerified = await redisClient.get(`otp-verified:${email}`);
 
   if (!isOtpVerified) {
-    throw new AppError(
-      StatusCodes.UNAUTHORIZED,
-      "OTP not verified"
-    );
+    throw new AppError(StatusCodes.UNAUTHORIZED, "OTP not verified");
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   const user = await userRepository.updatePasswordByEmail(
     email,
-    hashedPassword
+    hashedPassword,
   );
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
 
   // cleanup redis
   await redisClient.del(`otp-verified:${email}`);
   await redisClient.del(`forgot-password:${email}`);
+
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(user._id),
+      actorRole: user.role,
+      action: "RESET_PASSWORD",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(user._id),
+      message: `${user.email} has reset their password`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "Password Reset Successful",
+      message: "Your password has been successfully reset.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
 
   return {
     message: "Password reset successfully",
     user,
   };
 };
-
 /**
  * STEP 4: Change Password (logged in user)
  */
 const changePassword = async (
   userId: string,
   oldPassword: string,
-  newPassword: string
+  newPassword: string,
 ) => {
   const user = await userRepository.findByIdWithPassword(userId);
 
-  if (!user)
-    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
   const isMatch = await bcrypt.compare(oldPassword, user.password || "");
 
@@ -111,13 +166,29 @@ const changePassword = async (
   if (isSame) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      "New password cannot be same as old password"
+      "New password cannot be same as old password",
     );
   }
 
   user.password = await bcrypt.hash(newPassword, 10);
   await user.save();
-
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(userId),
+      actorRole: user.role,
+      action: "CHANGE_PASSWORD",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(userId),
+      message: `User ${userId} changed their password`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: userId,
+      title: "Password Change Successful",
+      message: "Your password has been successfully changed.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
   return { message: "Password changed successfully" };
 };
 
@@ -130,13 +201,28 @@ const logout = async (token: string, userId: string) => {
     EX: 60 * 60 * 24, // 1 day
   });
 
-await userRepository.updateUser(userId, {
-  lastLogoutAt: new Date(),
-} as any)
+  // update last logout
+  await userRepository.updateUser(userId, { lastLogoutAt: new Date() } as any);
+
+  // fetch user to get role
+  const user = await userRepository.findById(userId);
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  // log activity
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(userId),
+    actorRole: user.role,
+    action: "LOGOUT",
+    entityType: "Auth",
+    entityId: new Types.ObjectId(userId),
+    message: `User ${userId} logged out`,
+    status: "SUCCESS",
+  });
 
   return { message: "Logged out successfully" };
 };
-
 /**
  * STEP 6: Update last login
  */
