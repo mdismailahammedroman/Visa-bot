@@ -58,6 +58,12 @@ const credentialLogin = CatchAsync(
         );
       }
 
+            if (!user.is_verified) {
+        return next(
+          new AppError(StatusCodes.FORBIDDEN, "Please verify your account before logging in")
+        );
+      }
+
       const tokensToAdd = normalizeTokens(req.body.fcmTokens);
 
       for (const token of tokensToAdd) {
@@ -83,13 +89,6 @@ const credentialLogin = CatchAsync(
         status: "SUCCESS",
         ip: req.ip,
         userAgent: req.headers["user-agent"] || "",
-      }),
-
-      NotificationService.sendNotification({
-        userId: user._id.toString(),
-        title: "Login Successful",
-        message: "You have successfully logged in",
-        type: "SYSTEM_UPDATE",
       }),
     ]);
 

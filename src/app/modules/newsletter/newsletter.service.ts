@@ -4,48 +4,78 @@ import { StatusCodes } from "http-status-codes";
 import { NewsletterRepository } from "./newsletter.repository";
 import { transporter } from "../../utils/mail/mailer";
 import { NotificationService } from "../notification/notification.service";
+import { ActivityLogService } from "../activity/activityLog.service";
+import { Types } from "mongoose";
 
 
-const subscribe = async (email: string) => {
+const subscribe = async (email: string, user: any) => {
   const existing = await NewsletterRepository.findSubscriberByEmail(email);
+
+  let result;
 
   if (existing && existing.status === "SUBSCRIBED") {
     throw new AppError(StatusCodes.CONFLICT, "Already subscribed");
   }
 
   if (existing) {
-    return NewsletterRepository.updateSubscriber(email, {
+    result = await NewsletterRepository.updateSubscriber(email, {
       status: "SUBSCRIBED",
     });
+  } else {
+    result = await NewsletterRepository.createSubscriber({ email });
   }
 
-  return NewsletterRepository.createSubscriber({ email });
+  // 🔥 Activity Log
+  await ActivityLogService.logActivity({
+    actorId: user._id,
+    actorRole: user.role,
+    action: "SUBSCRIBE_NEWSLETTER",
+    entityType: "Newsletter",
+    entityId: user._id,
+    message: `${email} subscribed to newsletter`,
+    status: "SUCCESS",
+  });
+
+  return result;
 };
 
-const unsubscribe = async (email: string) => {
+const unsubscribe = async (email: string, user: any) => {
   const existing = await NewsletterRepository.findSubscriberByEmail(email);
 
   if (!existing) {
     throw new AppError(StatusCodes.NOT_FOUND, "Subscriber not found");
   }
 
-  return NewsletterRepository.updateSubscriber(email, {
+  const result = await NewsletterRepository.updateSubscriber(email, {
     status: "UNSUBSCRIBED",
   });
+
+  // 🔥 Activity Log
+  await ActivityLogService.logActivity({
+    actorId: user._id,
+    actorRole: user.role,
+    action: "UNSUBSCRIBE_NEWSLETTER",
+    entityType: "Newsletter",
+    entityId: user._id,
+    message: `${email} unsubscribed from newsletter`,
+    status: "SUCCESS",
+  });
+
+  return result;
 };
 
 const getSubscribers = async () => {
   return NewsletterRepository.findAllSubscribers();
 };
 
-const createCampaign = async (payload: any, userId: string) => {
+const createCampaign = async (payload: any, user: any) => {
   const campaign = await NewsletterRepository.createCampaign({
     ...payload,
-    createdBy: userId,
+    createdBy: user._id,
   });
 
   await NotificationService.sendNotification({
-    userId,
+    userId: user._id.toString(),
     title: "Newsletter Campaign Created",
     message: `Campaign "${campaign.title}" created successfully`,
     type: "NEWSLETTER",
@@ -54,10 +84,21 @@ const createCampaign = async (payload: any, userId: string) => {
     },
   });
 
+  // 🔥 Activity Log
+  await ActivityLogService.logActivity({
+    actorId: user._id,
+    actorRole: user.role,
+    action: "CREATE_CAMPAIGN",
+    entityType: "Newsletter",
+    entityId: campaign._id,
+    message: `Campaign created: ${campaign.title}`,
+    status: "SUCCESS",
+  });
+
   return campaign;
 };
 
-const sendCampaign = async (campaignId: string) => {
+const sendCampaign = async (campaignId: string, user: any) => {
   const campaign = await NewsletterRepository.findCampaignById(campaignId);
 
   if (!campaign) {
@@ -71,21 +112,32 @@ const sendCampaign = async (campaignId: string) => {
       to: sub.email,
       subject: campaign.subject,
       html: `
-          <div style="font-family: Arial, sans-serif;">
-            <h1>${campaign.title}</h1>
-            <div>${campaign.content}</div>
-          </div>
-        `,
+        <div style="font-family: Arial, sans-serif;">
+          <h1>${campaign.title}</h1>
+          <div>${campaign.content}</div>
+        </div>
+      `,
     });
   }
-//send noification
 
-
-  return NewsletterRepository.updateCampaign(campaignId, {
+  const result = await NewsletterRepository.updateCampaign(campaignId, {
     status: "SENT",
     sentAt: new Date(),
     totalRecipients: subscribers.length,
   });
+
+  // 🔥 Activity Log (VERY IMPORTANT)
+  await ActivityLogService.logActivity({
+    actorId: user._id,
+    actorRole: user.role,
+    action: "SEND_CAMPAIGN",
+    entityType: "Newsletter",
+    entityId: new Types.ObjectId(campaignId),
+    message: `Campaign sent to ${subscribers.length} users`,
+    status: "SUCCESS",
+  });
+
+  return result;
 };
 
 const getCampaigns = async () => {
