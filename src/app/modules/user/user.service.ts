@@ -12,6 +12,10 @@ import { userRepository } from "./user.repository";
 import { hashPassword } from "../../helpers/passwordHelper";
 import { otpService } from "../Otp/otp.service";
 import { QueryParams } from "../../utils/queryBuilder";
+import { ActivityLogService } from "../activity/activityLog.service";
+import { NotificationService } from "../notification/notification.service";
+import { Types } from "mongoose";
+import { NotificationType } from "../notification/notification.interface";
 
 const registerUser = async (payload: TCreateUserPayload) => {
   const existingUser = await userRepository.findByEmail(payload.email);
@@ -29,6 +33,23 @@ const registerUser = async (payload: TCreateUserPayload) => {
     await userRepository.addFCMToken(newUser._id, payload.fcmToken);
   }
   await otpService.sendOtp(newUser.email, "NEW_USER_VERIFY", newUser.name);
+
+   // --- Parallel log + notification ---
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(newUser._id),
+      actorRole: newUser.role,
+      action: "REGISTER",
+      entityType: "User",
+      entityId: new Types.ObjectId(newUser._id),
+      message: `User ${newUser.email} registered`,
+      status: "SUCCESS",
+      ip: "",
+      userAgent: "",
+    }),
+  ]);
+
+
   return newUser;
 };
 
@@ -55,14 +76,39 @@ const updateUser = async (
 
   // If file uploaded, update profile picture URL
 
-  if (file) {
-    update.profile_picture = file.location; // S3 public URL
+if (file) {
+  if (file.fieldname === "profile_picture") {
+    update.profile_picture = file.location;
+  } else if (file.fieldname === "coverPicture") {
+    update.coverPicture = file.location;
   }
-  if (file) {
-    update.coverPicture = file.location; // S3 public URL
-  }
+}
   const updatedUser = await userRepository.updateUser(userId, update);
 
+  if (!updatedUser) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User update failed");
+  }
+
+await Promise.all([
+  ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(updatedUser._id), // <-- ObjectId enforced
+    actorRole: updatedUser.role,
+    action: "UPDATE_USER",
+    entityType: "User",
+    entityId: new Types.ObjectId(updatedUser._id), // <-- ObjectId enforced
+    message: `User ${updatedUser.email} info updated`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  }),
+  NotificationService.sendNotification({
+    userId: updatedUser._id.toString(), // string ok here
+    title: "Profile Updated",
+    message: `User ${updatedUser.email} updated profile information`,
+    type: NotificationType.SYSTEM_UPDATE,
+  }),
+]);
+  
   return updatedUser;
 };
 
@@ -147,6 +193,31 @@ const changeUserStatus = async (
   }
 
   const updatedUser = await userRepository.updateUser(userId, { status });
+
+  if (!updatedUser) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User update failed");
+  }
+
+  // --- Activity Log ---
+await Promise.all([
+  ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(adminUser._id),
+    actorRole: adminUser.role,
+    action: "UPDATE_USER_STATUS",
+    entityType: "User",
+    entityId: new Types.ObjectId(updatedUser._id),
+    message: `Admin ${adminUser.email} changed status of ${updatedUser.email} to ${status}`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  }),
+  NotificationService.sendNotification({
+    userId: updatedUser._id.toString(),
+    title: "Profile Updated",
+    message: `Admin ${adminUser.email} changed status of ${updatedUser.email} to ${status}`,
+    type: NotificationType.SYSTEM_UPDATE,
+  }),
+]);
   return updatedUser;
 };
 
@@ -160,11 +231,40 @@ const changeUserRole = async (adminUser: IUser, userId: string, role: Role) => {
   }
 
   const user = await userRepository.findById(userId);
+
   if (!user || user.isDeleted) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
+  const oldRole = user.role; // ✅ track previous role
+
   const updatedUser = await userRepository.updateUser(userId, { role });
+
+  if (!updatedUser) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User update failed");
+  }
+
+  // --- Activity Log ---
+await Promise.all([
+  ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(adminUser._id),
+    actorRole: adminUser.role,
+    action: "CHANGE_USER_ROLE",
+    entityType: "User",
+    entityId: new Types.ObjectId(updatedUser._id),
+    message: `Admin ${adminUser.email} changed role of ${updatedUser.email} from ${oldRole} to ${role}`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  }),
+  NotificationService.sendNotification({
+    userId: updatedUser._id.toString(),
+    title: "Role Updated",
+    message: `Your role has been changed from ${oldRole} to ${role}`,
+    type: NotificationType.SYSTEM_UPDATE,
+  }),
+]);
+
   return updatedUser;
 };
 
@@ -173,6 +273,15 @@ const deleteMyAccount = async (userId: string) => {
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
   await userRepository.deleteUserById(userId); // repository handles hard delete
+  await ActivityLogService.logActivity({
+  actorId: new Types.ObjectId(user._id),
+  actorRole: user.role,
+  action: "DELETE_ACCOUNT",
+  entityType: "User",
+  entityId: new Types.ObjectId(user._id),
+  message: `User ${user.email} deleted account`,
+  status: "SUCCESS",
+});
   return null;
 };
 
@@ -197,33 +306,50 @@ const saveFCMToken = async (userId: string, fcmToken: string) => {
   return fcmTokens;
 };
 
-// 🔔 Push toggle
+
+// 🔔 Push toggle fixed with await
 const togglePush = async (userId: string, enabled: boolean) => {
   const user = await userRepository.findById(userId);
-  if (!user) throw new AppError(404, "User not found");
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-  return userRepository.updateUser(userId, {
-    notificationSettings: {
-      ...user.notificationSettings,
-      push: enabled,
-    },
+  const result = await userRepository.updateUser(userId, {
+    notificationSettings: { ...user.notificationSettings, push: enabled },
   });
+
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(userId) ,
+    actorRole: user.role,
+    action: enabled ? "TOGGLE_PUSH_ON" : "TOGGLE_PUSH_OFF",
+    entityType: "User",
+    entityId: new Types.ObjectId(userId) ,
+    message: `User ${user.email} turned push notifications ${enabled ? "ON" : "OFF"}`,
+    status: "SUCCESS",
+  });
+
+  return result;
 };
 
-
-// 📧 Email toggle
+// 📧 Email toggle fixed
 const toggleEmail = async (userId: string, enabled: boolean) => {
   const user = await userRepository.findById(userId);
-  if (!user) throw new AppError(404, "User not found");
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-  return userRepository.updateUser(userId, {
-    notificationSettings: {
-      ...user.notificationSettings,
-      email: enabled,
-    },
+  const result = await userRepository.updateUser(userId, {
+    notificationSettings: { ...user.notificationSettings, email: enabled },
   });
-};
 
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(userId) ,
+    actorRole: user.role,
+    action: enabled ? "TOGGLE_EMAIL_ON" : "TOGGLE_EMAIL_OFF",
+    entityType: "User",
+    entityId: new Types.ObjectId(userId) ,
+    message: `User ${user.email} turned email notifications ${enabled ? "ON" : "OFF"}`,
+    status: "SUCCESS",
+  });
+
+  return result;
+};
 
 // export user services
 export const userService = {

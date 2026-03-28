@@ -14,7 +14,7 @@ const submitFeedback = CatchAsync(async (req: Request, res: Response) => {
     ...req.body,
     userId,
   };
-  const result = await feedbackService.createFeedback(payload);
+  const result = await feedbackService.createFeedback(payload, user, req);
 
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
@@ -78,8 +78,8 @@ const getFeedbackByVisaApplication = CatchAsync(
 
 const deleteFeedback = CatchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-
-  const result = await feedbackService.deleteFeedback(id as string);
+  const user = req.user as any;
+  const result = await feedbackService.deleteFeedback(id as string, user, req);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

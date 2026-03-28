@@ -56,7 +56,7 @@ export const initSockets = (io: Server) => {
      */
 
     socket.on("disconnect", async () => {
-      console.log("❌ Client disconnected:", socket.id);
+      logger.log("❌ Client disconnected:", socket.id);
 
       if (user?.role === "MANAGER") {
         try {
@@ -64,9 +64,8 @@ export const initSockets = (io: Server) => {
 
           await removeManagerFromQueue(user._id);
 
-          console.log(`🔴 Manager offline: ${user._id}`);
         } catch (error) {
-          console.error("Manager offline cleanup error:", error);
+          logger.error("Manager offline cleanup error:", error);
         }
       }
     });

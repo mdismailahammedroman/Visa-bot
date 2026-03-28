@@ -6,7 +6,7 @@ import { sendResponse } from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
 
 const subscribe = CatchAsync(async (req: Request, res: Response) => {
-  const result = await NewsletterService.subscribe(req.body.email);
+  const result = await NewsletterService.subscribe(req.body.email, req.user);
 
   return sendResponse(res, {
     success: true,
@@ -17,7 +17,7 @@ const subscribe = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const unsubscribe = CatchAsync(async (req: Request, res: Response) => {
-  const result = await NewsletterService.unsubscribe(req.body.email);
+  const result = await NewsletterService.unsubscribe(req.body.email, req.user);
 
   return sendResponse(res, {
     success: true,
@@ -41,10 +41,7 @@ const getSubscribers = CatchAsync(async (req: Request, res: Response) => {
 const createCampaign = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
 
-  const result = await NewsletterService.createCampaign(
-    req.body,
-    user._id
-  );
+  const result = await NewsletterService.createCampaign(req.body, user);
 
   return sendResponse(res, {
     success: true,
@@ -55,8 +52,10 @@ const createCampaign = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const sendCampaign = CatchAsync(async (req: Request, res: Response) => {
-  const {id}=req.params;
-  const result = await NewsletterService.sendCampaign(id as string);
+  const { id } = req.params;
+  const user = req.user as any;
+
+  const result = await NewsletterService.sendCampaign(id as string, user);
 
   return sendResponse(res, {
     success: true,

@@ -20,9 +20,9 @@ export const updateUserZodSchema = z.object({
 
       gender: z.enum(GENDER_TYPE).optional(),
 
-      mobile: z.string().optional(), // phone number ≠ url
+      mobile: z.string().optional(), 
 
-      location: z.string().optional(), // address / city ≠ url
+      location: z.string().optional(), 
     })
-    .strict(), // ✅ extra field থাকলে reject করবে
+    .strict(), 
 });

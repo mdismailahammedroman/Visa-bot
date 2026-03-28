@@ -15,12 +15,14 @@ import { redisClient } from "../../config/redis.config";
 import { envVar } from "../../config/EnvVar";
 import { userService } from "../user/user.service";
 import { normalizeTokens } from "../../utils/normalizeTokens";
+import { ActivityLogService } from "../activity/activityLog.service";
+import { NotificationService } from "../notification/notification.service";
 
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
 
   // ✅ allow only your app scheme
-  if (input.startsWith("epicnz://callback")) return input;
+  if (input.startsWith("visabot://callback")) return input;
 
   // ✅ allow only relative paths for web
   if (!input.startsWith("/")) return "/";
@@ -56,6 +58,12 @@ const credentialLogin = CatchAsync(
         );
       }
 
+            if (!user.is_verified) {
+        return next(
+          new AppError(StatusCodes.FORBIDDEN, "Please verify your account before logging in")
+        );
+      }
+
       const tokensToAdd = normalizeTokens(req.body.fcmTokens);
 
       for (const token of tokensToAdd) {
@@ -69,6 +77,21 @@ const credentialLogin = CatchAsync(
         await redisClient.rPush("managerQueue", user._id.toString());
       }
 
+      // 🔥 ACTIVITY + NOTIFICATION (FIXED HERE)
+    await Promise.all([
+      ActivityLogService.logActivity({
+        actorId: user._id,        // ✅ no Types.ObjectId needed
+        actorRole: user.role,
+        action: "LOGIN",
+        entityType: "Auth",
+        entityId: user._id,
+        message: `User ${user.email} logged in`,
+        status: "SUCCESS",
+        ip: req.ip,
+        userAgent: req.headers["user-agent"] || "",
+      }),
+    ]);
+
       return sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
@@ -79,6 +102,7 @@ const credentialLogin = CatchAsync(
         },
       });
     })(req, res, next);
+    
   },
 );
 
@@ -119,11 +143,35 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
     await redisClient.rPush("managerQueue", user._id.toString());
   }
 
+
+  // 🔥 ACTIVITY + NOTIFICATION
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: user._id,
+      actorRole: user.role,
+      action: "GOOGLE_LOGIN",
+      entityType: "Auth",
+      entityId: user._id,
+      message: `User logged in via Google (${user.email})`,
+      status: "SUCCESS",
+      ip: req.ip,
+      userAgent: req.headers["user-agent"] || "",
+    }),
+
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "Google Login Successful",
+      message: "You have successfully logged in using Google",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
+
+
   const decoded = decodeState(req.query.state as string);
 
   let redirect = decoded?.redirect;
-  if (!redirect || !redirect.startsWith("epicnz://")) {
-    redirect = "epicnz://callback";
+  if (!redirect || !redirect.startsWith("visabot://")) {
+    redirect = "visabot://callback";
   }
 
   const redirectUri = `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`;
@@ -170,12 +218,35 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
     await redisClient.rPush("managerQueue", user._id.toString());
   }
 
+   // 🔥 ACTIVITY + NOTIFICATION
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: user._id,
+      actorRole: user.role,
+      action: "APPLE_LOGIN",
+      entityType: "Auth",
+      entityId: user._id,
+      message: `User logged in via Apple (${user.email})`,
+      status: "SUCCESS",
+      ip: req.ip,
+      userAgent: req.headers["user-agent"] || "",
+    }),
+
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "Apple Login Successful",
+      message: "You have successfully logged in using Apple",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
+
+
   const rawState = req.body?.state ?? req.query?.state;
   const decoded = decodeState(rawState as string);
 
   let redirect = decoded?.redirect;
-  if (!redirect || !redirect.startsWith("epicnz://")) {
-    redirect = "epicnz://callback";
+  if (!redirect || !redirect.startsWith("visabot://")) {
+    redirect = "visabot://callback";
   }
 
   const redirectUri = `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`;

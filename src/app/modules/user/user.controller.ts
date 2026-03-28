@@ -144,7 +144,8 @@ const setUserRole = CatchAsync(async (req: Request, res: Response) => {
 const deleteMyAccount = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
 
-  await userService.deleteMyAccount(user.userId);
+
+  await userService.deleteMyAccount(user._id);
 
   sendResponse(res, {
     success: true,

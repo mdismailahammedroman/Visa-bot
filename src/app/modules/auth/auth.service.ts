@@ -1,79 +1,231 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import bcrypt from "bcrypt";
 import { userRepository } from "../user/user.repository";
 import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { redisClient } from "../../config/redis.config";
 import { otpService } from "../Otp/otp.service";
+import { NotificationService } from "../notification/notification.service";
+import { ActivityLogService } from "../activity/activityLog.service";
+import { Types } from "mongoose";
 
-// Step 1: Send OTP for forgot password
+/**
+ * STEP 1: Forgot Password (Send OTP)
+ */
 const forgotPassword = async (email: string) => {
   const user = await userRepository.findByEmail(email);
+
   if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
+
   if (!user.is_verified)
     throw new AppError(StatusCodes.BAD_REQUEST, "User is not verified");
+
   if (user.isDeleted)
     throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
 
-  // Send OTP using otpService
+  // 🚨 prevent OTP spam (1 min cooldown)
+  const otpCooldown = await redisClient.get(`forgot-password:${email}`);
+  if (otpCooldown) {
+    throw new AppError(
+      StatusCodes.TOO_MANY_REQUESTS,
+      "OTP already sent. Try again later",
+    );
+  }
+
+  await redisClient.set(`forgot-password:${email}`, "true", { EX: 60 });
+
   await otpService.sendOtp(email, "FORGOT_PASSWORD", user.name);
+
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(user._id),
+      actorRole: user.role,
+      action: "FORGOT_PASSWORD",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(user._id),
+      message: `${user.email} requested password reset OTP`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "Password Reset Request",
+      message: "OTP has been sent to your email for password reset.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
 
   return { message: "OTP sent successfully" };
 };
 
-// Step 2: Verify OTP
+/**
+ * STEP 2: Verify OTP
+ */
 const verifyOTPForPassword = async (email: string, otp: string) => {
+  const user = await userRepository.findByEmail(email);
+
+  if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
+
   await otpService.verifyOTP({
     email,
     otp,
-    purpose: "FORGOT_PASSWORD", // ✅ hardcoded
+    purpose: "FORGOT_PASSWORD",
   });
 
+  // mark OTP verified for 5 min
   await redisClient.set(`otp-verified:${email}`, "true", { EX: 300 });
+
+  // 🔥 ACTIVITY + NOTIFICATION
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(user._id),
+      actorRole: user.role,
+      action: "VERIFY_OTP",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(user._id),
+      message: `${user.email} successfully verified OTP for password reset`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "OTP Verified",
+      message: "You have successfully verified your OTP.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
 
   return { message: "OTP verified successfully" };
 };
 
-// Step 3: Reset password after OTP verified
+/**
+ * STEP 3: Reset Password
+ */
 const resetPassword = async (email: string, newPassword: string) => {
   const isOtpVerified = await redisClient.get(`otp-verified:${email}`);
-  if (!isOtpVerified)
-    throw new AppError(
-      StatusCodes.UNAUTHORIZED,
-      "OTP not verified. Please verify OTP first",
-    );
 
-  const user = await userRepository.updatePasswordByEmail(email, newPassword);
+  if (!isOtpVerified) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "OTP not verified");
+  }
 
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  const user = await userRepository.updatePasswordByEmail(
+    email,
+    hashedPassword,
+  );
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  // cleanup redis
   await redisClient.del(`otp-verified:${email}`);
+  await redisClient.del(`forgot-password:${email}`);
 
-  return { message: "Password reset successfully", user };
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(user._id),
+      actorRole: user.role,
+      action: "RESET_PASSWORD",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(user._id),
+      message: `${user.email} has reset their password`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: user._id.toString(),
+      title: "Password Reset Successful",
+      message: "Your password has been successfully reset.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
+
+  return {
+    message: "Password reset successfully",
+    user,
+  };
 };
-
-// Step 4: Change password (logged-in user)
+/**
+ * STEP 4: Change Password (logged in user)
+ */
 const changePassword = async (
   userId: string,
   oldPassword: string,
   newPassword: string,
 ) => {
-  const user = await userRepository.findByIdWithPassword(userId); // now returns a doc
+  const user = await userRepository.findByIdWithPassword(userId);
+
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
   const isMatch = await bcrypt.compare(oldPassword, user.password || "");
+
   if (!isMatch)
-    throw new AppError(StatusCodes.BAD_REQUEST, "Old password is incorrect");
+    throw new AppError(StatusCodes.BAD_REQUEST, "Old password incorrect");
+
+  // prevent same password reuse
+  const isSame = await bcrypt.compare(newPassword, user.password || "");
+  if (isSame) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "New password cannot be same as old password",
+    );
+  }
 
   user.password = await bcrypt.hash(newPassword, 10);
   await user.save();
+  await Promise.all([
+    ActivityLogService.logActivity({
+      actorId: new Types.ObjectId(userId),
+      actorRole: user.role,
+      action: "CHANGE_PASSWORD",
+      entityType: "Auth",
+      entityId: new Types.ObjectId(userId),
+      message: `User ${userId} changed their password`,
+      status: "SUCCESS",
+    }),
+    NotificationService.sendNotification({
+      userId: userId,
+      title: "Password Change Successful",
+      message: "Your password has been successfully changed.",
+      type: "SYSTEM_UPDATE",
+    }),
+  ]);
   return { message: "Password changed successfully" };
 };
 
-// Logout user
-const logout = async (userId: string) => {
-  await userRepository.invalidateToken(userId);
-  
-};
+/**
+ * STEP 5: Logout (JWT blacklist system)
+ */
+const logout = async (token: string, userId: string) => {
+  // blacklist token
+  await redisClient.set(`blacklist:${token}`, "true", {
+    EX: 60 * 60 * 24, // 1 day
+  });
 
-// Update last login
+  // update last logout
+  await userRepository.updateUser(userId, { lastLogoutAt: new Date() } as any);
+
+  // fetch user to get role
+  const user = await userRepository.findById(userId);
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  // log activity
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(userId),
+    actorRole: user.role,
+    action: "LOGOUT",
+    entityType: "Auth",
+    entityId: new Types.ObjectId(userId),
+    message: `User ${userId} logged out`,
+    status: "SUCCESS",
+  });
+
+  return { message: "Logged out successfully" };
+};
+/**
+ * STEP 6: Update last login
+ */
 const updateLastLogin = async (userId: string) => {
   await userRepository.updateUser(userId, {
     lastLoginAt: new Date(),

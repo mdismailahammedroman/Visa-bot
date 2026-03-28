@@ -76,7 +76,7 @@ export const sendNotificationEmail = async ({
   message: string;
 }) => {
   try {
-    const html = renderTemplate("notification", {
+    const html = renderTemplate("notification", { // use notification template
       name,
       title,
       message,
