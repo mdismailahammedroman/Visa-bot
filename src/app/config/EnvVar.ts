@@ -53,6 +53,8 @@ interface APPLE_AUTH_TYPE {
 interface EnvVar {
   PORT: string;
   MONGODB_URL: string;
+  SUPER_ADMIN_EMAIL: string;
+  SUPER_ADMIN_PASSWORD: string;
   NODE_ENV: "development" | "production";
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
@@ -76,6 +78,8 @@ const loadEnvVariables = (): EnvVar => {
   const requiredEnvVars: string[] = [
     "PORT",
     "MONGODB_URL",
+    "SUPER_ADMIN_EMAIL",
+    "SUPER_ADMIN_PASSWORD",
     "NODE_ENV",
     "JWT_SECRET",
     "JWT_EXPIRES_IN",
@@ -130,6 +134,8 @@ const loadEnvVariables = (): EnvVar => {
   return {
     PORT: process.env.PORT as string,
     MONGODB_URL: process.env.MONGODB_URL as string,
+    SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL as string,
+    SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD as string,
     NODE_ENV: process.env.NODE_ENV as "development" | "production",
     JWT_SECRET: process.env.JWT_SECRET as string,
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN as string,
@@ -186,7 +192,7 @@ const loadEnvVariables = (): EnvVar => {
       APPLE_PRIVATE_KEY_PATH: process.env.APPLE_PRIVATE_KEY_PATH as string,
       APPLE_CALLBACK_URL: process.env.APPLE_CALLBACK_URL as string,
     },
-    OPENAI_API_KEY:process.env.OPENAI_API_KEY as string,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY as string,
   };
 };
 

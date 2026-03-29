@@ -13,6 +13,7 @@ import { convertToUSD } from "../../utils/currency";
 import { getUserCurrency } from "../../utils/userCurrency";
 import { getCurrencyRate } from "../../utils/fixer";
 import { ActivityLogService } from "../activity/activityLog.service";
+import { NotificationType } from "../notification/notification.interface";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
   const applyVisaServices = await VisaServiceRepository.findById(
@@ -70,7 +71,7 @@ const createVisaApplication = async (payload: IVisaApplication) => {
     userId: payload.userId.toString(),
     title: "Visa Application Submitted",
     message: "Your visa application has been successfully submitted",
-    type: "APPLICATION_CREATE",
+   type: NotificationType.APPLICATION_SUBMITTED,
     metadata: { applicationId: created._id },
   });
 
