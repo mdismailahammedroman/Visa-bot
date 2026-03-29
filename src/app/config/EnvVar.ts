@@ -23,6 +23,12 @@ interface SMTP_TYPE {
   SMTP_FROM_NAME?: string;
 }
 
+interface SENDGRID_TYPE {
+  SENDGRID_API_KEY: string;
+  SENDGRID_FROM_EMAIL: string;
+  SENDGRID_FROM_NAME: string;
+}
+
 interface AWS_S3_type {
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
@@ -67,6 +73,7 @@ interface EnvVar {
   AWS: AWS_S3_type;
   FIREBASE: FIREBASE_TYPE;
   SMTP: SMTP_TYPE;
+  SENDGRID: SENDGRID_TYPE;
   FIXER_API_KEY: string;
   STRIPE: STRIPE_TYPE;
   GOOGLE_AUTH: GOOGLE_TYPE;
@@ -108,6 +115,9 @@ const loadEnvVariables = (): EnvVar => {
     "SMTP_PASSWORD",
     "SMTP_FROM_EMAIL",
     "SMTP_FROM_NAME",
+    "SENDGRID_API_KEY",
+    "SENDGRID_FROM_EMAIL",
+    "SENDGRID_FROM_NAME",
     "FIXER_API_KEY",
 
     "STRIPE_SECRET_KEY",
@@ -173,6 +183,11 @@ const loadEnvVariables = (): EnvVar => {
       SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
       SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL as string,
       SMTP_FROM_NAME: process.env.SMTP_FROM_NAME as string,
+    },
+    SENDGRID: {
+      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY as string,
+      SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL as string,
+      SENDGRID_FROM_NAME: process.env.SENDGRID_FROM_NAME as string,
     },
     FIXER_API_KEY: process.env.FIXER_API_KEY as string,
     STRIPE: {

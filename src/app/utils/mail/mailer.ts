@@ -1,18 +1,18 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import { envVar } from "../../config/EnvVar";
 import { OtpPurpose } from "../../modules/Otp/otp.interface";
-import { renderTemplate } from "./tamplate";
+import { renderTemplate } from "./templates";
 
-export const transporter = nodemailer.createTransport({
-  host: envVar.SMTP.SMTP_HOST,
-  port: Number(envVar.SMTP.SMTP_PORT),
-  secure: true,
-  auth: {
-    user: envVar.SMTP.SMTP_USER,
-    pass: envVar.SMTP.SMTP_PASSWORD,
-  },
-  connectionTimeout: 10000,
-});
+sgMail.setApiKey(envVar.SENDGRID.SENDGRID_API_KEY);
+
+export const sendEmail = async (options: { to: string; subject: string; html: string; from?: { name: string; email: string } | string }) => {
+  return sgMail.send({
+    from: options.from || { name: envVar.SENDGRID.SENDGRID_FROM_NAME, email: envVar.SENDGRID.SENDGRID_FROM_EMAIL },
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+  });
+};
 
 export const sendOtpEmail = async ({
   to,
@@ -52,8 +52,7 @@ export const sendOtpEmail = async ({
       description, // pass description to template
     });
 
-    await transporter.sendMail({
-      from: `"${envVar.SMTP.SMTP_FROM_NAME}" <${envVar.SMTP.SMTP_FROM_EMAIL}>`,
+    await sendEmail({
       to,
       subject,
       html,
@@ -84,8 +83,7 @@ export const sendNotificationEmail = async ({
       year: new Date().getFullYear(),
     });
 
-    await transporter.sendMail({
-      from: `"${envVar.SMTP.SMTP_FROM_NAME}" <${envVar.SMTP.SMTP_FROM_EMAIL}>`,
+    await sendEmail({
       to,
       subject: title,
       html,
