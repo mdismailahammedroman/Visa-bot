@@ -12,7 +12,7 @@ import { User } from "../modules/user/user.model";
 export const seedSuperAdmin = async () => {
   try {
     const existingAdmin = await User.findOne({
-      email: "dev.epic.nz@gmail.com",
+      email: envVar.SUPER_ADMIN_EMAIL,
     });
 
     if (existingAdmin) {
