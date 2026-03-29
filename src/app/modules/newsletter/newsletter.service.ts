@@ -2,7 +2,7 @@
 import AppError from "../../ErrorHelpers/AppError";
 import { StatusCodes } from "http-status-codes";
 import { NewsletterRepository } from "./newsletter.repository";
-import { transporter } from "../../utils/mail/mailer";
+import { sendEmail } from "../../utils/mail/mailer";
 import { NotificationService } from "../notification/notification.service";
 import { ActivityLogService } from "../activity/activityLog.service";
 import { Types } from "mongoose";
@@ -108,7 +108,7 @@ const sendCampaign = async (campaignId: string, user: any) => {
   const subscribers = await NewsletterRepository.findSubscribedUsers();
 
   for (const sub of subscribers) {
-    await transporter.sendMail({
+    await sendEmail({
       to: sub.email,
       subject: campaign.subject,
       html: `
