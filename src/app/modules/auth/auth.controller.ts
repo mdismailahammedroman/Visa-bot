@@ -17,6 +17,7 @@ import { userService } from "../user/user.service";
 import { normalizeTokens } from "../../utils/normalizeTokens";
 import { ActivityLogService } from "../activity/activityLog.service";
 import { NotificationService } from "../notification/notification.service";
+import { NotificationType } from "../notification/notification.interface";
 
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
@@ -158,12 +159,6 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
       userAgent: req.headers["user-agent"] || "",
     }),
 
-    NotificationService.sendNotification({
-      userId: user._id.toString(),
-      title: "Google Login Successful",
-      message: "You have successfully logged in using Google",
-      type: "SYSTEM_UPDATE",
-    }),
   ]);
 
 

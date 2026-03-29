@@ -6,12 +6,11 @@ import { connectDB, disconnectDB } from "./app/config/db";
 import { envVar } from "./app/config/EnvVar";
 import { connectRedis, disconnectRedis } from "./app/config/redis.config";
 
-
 import { initSockets } from "./app/modules/socket/socket";
 import { setIo } from "./app/modules/socket/socket.store";
 import { setupSocketRedisAdapter } from "./app/config/redis.adapter";
 import logger from "./app/config/logger";
-
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
 
 const server = http.createServer(app);
 
@@ -24,10 +23,10 @@ const io = new SocketIoServer(server, {
 
 // 🔑 Bootstrap server
 async function bootstrap() {
-
   await connectDB();
   await connectRedis();
-
+  // 🔥 Seed Super Admin after DB connected
+  await seedSuperAdmin();
   // 🔥 IMPORTANT ORDER
   setIo(io);
 
@@ -37,12 +36,12 @@ async function bootstrap() {
 
   // await seedSuperAdmin();
 
-server.listen(envVar.PORT, () => {
-  logger.info(`🚀 Server started ${envVar.PORT}`, {
-    port: envVar.PORT,
-    env: process.env.NODE_ENV,
+  server.listen(envVar.PORT, () => {
+    logger.info(`🚀 Server started ${envVar.PORT}`, {
+      port: envVar.PORT,
+      env: process.env.NODE_ENV,
+    });
   });
-});
 }
 
 bootstrap().catch((err) => {

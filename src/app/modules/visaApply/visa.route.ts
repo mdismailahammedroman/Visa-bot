@@ -15,7 +15,7 @@ const router = Router();
 // Apply Visa
 router.post(
   "/apply/:visaServiceId",
-  checkAuth(Role.USER),
+  checkAuth(Role.USER, Role.ADMIN),
     uploadToS3.fields([
     { name: "passportCopy", maxCount: 1 },
     { name: "passportPhoto", maxCount: 1 },
