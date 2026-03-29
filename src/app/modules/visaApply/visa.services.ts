@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../ErrorHelpers/AppError";
-import {
-  ApplicationStatus,
-  IVisaApplication,
-} from "./visa.interface";
+import { ApplicationStatus, IVisaApplication } from "./visa.interface";
 import { VisaApplicationRepository } from "./visa.repository";
 import { VisaServiceRepository } from "../visaService/visaService.repository";
 import { QueryBuilder } from "../../utils/queryBuilder";
@@ -12,13 +9,14 @@ import { Types } from "mongoose";
 import { userRepository } from "../user/user.repository";
 import { Role } from "../user/user.interface";
 import { NotificationService } from "../notification/notification.service";
-import {  convertToUSD } from "../../utils/currency";
+import { convertToUSD } from "../../utils/currency";
 import { getUserCurrency } from "../../utils/userCurrency";
 import { getCurrencyRate } from "../../utils/fixer";
+import { ActivityLogService } from "../activity/activityLog.service";
 
 const createVisaApplication = async (payload: IVisaApplication) => {
   const applyVisaServices = await VisaServiceRepository.findById(
-    payload.visaServiceId.toString()
+    payload.visaServiceId.toString(),
   );
 
   if (!applyVisaServices)
@@ -27,12 +25,12 @@ const createVisaApplication = async (payload: IVisaApplication) => {
   const activeApplication =
     await VisaApplicationRepository.findActiveApplication(
       payload.userId.toString(),
-      payload.visaServiceId.toString()
+      payload.visaServiceId.toString(),
     );
 
   if (activeApplication) {
     throw new Error(
-      "You already have a pending or processing visa application."
+      "You already have a pending or processing visa application.",
     );
   }
 
@@ -50,21 +48,70 @@ const createVisaApplication = async (payload: IVisaApplication) => {
   if (payload.monthlyIncome) {
     payload.monthlyIncome = await convertToUSD(
       payload.monthlyIncome,
-      userCurrency
+      userCurrency,
     );
   }
+  const created = await VisaApplicationRepository.create(payload);
+  // ✅ Activity Log
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(payload.userId),
+    actorRole: Role.USER,
+    action: "CREATE_VISA_APPLICATION",
+    entityType: "VisaApplication",
+    entityId: new Types.ObjectId(created._id),
+    message: `User applied for visa (serviceId: ${payload.visaServiceId})`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
 
-  return await VisaApplicationRepository.create(payload);
+  // ✅ Notification
+  await NotificationService.sendNotification({
+    userId: payload.userId.toString(),
+    title: "Visa Application Submitted",
+    message: "Your visa application has been successfully submitted",
+    type: "APPLICATION_CREATE",
+    metadata: { applicationId: created._id },
+  });
+
+  return created;
 };
 
 const updateApplication = async (
   id: string,
   payload: Partial<IVisaApplication>,
 ) => {
-  const updated = await VisaApplicationRepository.updateById(id, payload);
-  if (!updated) {
+  // Fetch application first
+  const application = await VisaApplicationRepository.findById(id);
+
+  if (!application) {
     throw new AppError(StatusCodes.NOT_FOUND, "Visa application not found");
   }
+
+  // Update it
+  const updated = await VisaApplicationRepository.updateById(id, payload);
+
+  // Send notification to the user
+  await NotificationService.sendNotification({
+    userId: application.userId.toString(),
+    title: "Application Updated",
+    message: "Your visa application info has been updated",
+    type: "APPLICATION_UPDATED",
+  });
+
+  // ✅ Activity log
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(application.userId), // Or actorId if you know who updated it
+    actorRole: Role.MANAGER, // Or dynamically set based on updater
+    action: "UPDATE_APPLICATION",
+    entityType: "VisaApplication",
+    entityId: new Types.ObjectId(application._id),
+    message: `Application updated`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
+
   return updated;
 };
 
@@ -80,7 +127,7 @@ const getMyApplications = async (userId: string, queryParams: any) => {
       .populate("visaServiceId")
       .populate("countryId")
       .populate("assignedTo", "name email role"),
-    queryParams
+    queryParams,
   )
     .search(["status", "visaType"])
     .filter()
@@ -192,15 +239,22 @@ const updateStatus = async (id: string, status: ApplicationStatus) => {
       console.error("Failed to send status update notification:", err);
     }
   }
-
+  const actorId = application.assignedTo
+    ? application.assignedTo
+    : application.userId;
+  // ✅ Activity Log
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(actorId),
+    actorRole: Role.MANAGER,
+    action: "UPDATE_APPLICATION_STATUS",
+    entityType: "VisaApplication",
+    entityId: new Types.ObjectId(application._id),
+    message: `Application status updated to ${status}`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
   return updated;
-};
-
-const deleteVisaApplication = async (id: string) => {
-  const deleted = await VisaApplicationRepository.deleteById(id);
-  if (!deleted)
-    throw new AppError(StatusCodes.NOT_FOUND, "visa application not found");
-  return deleted;
 };
 
 const assignApplication = async (
@@ -261,15 +315,27 @@ const assignApplication = async (
   ];
 
   await application.save();
+  // ✅ Activity Log
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(assignedById),
+    actorRole: Role.ADMIN,
+    action: "ASSIGN_APPLICATION",
+    entityType: "VisaApplication",
+    entityId: new Types.ObjectId(applicationId),
+    message: `Application assigned to manager ${managerId}`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
 
   // 🔔 Notify manager
   await NotificationService.sendNotification({
-  userId: managerId,
-  title: "New Application Assigned",
-  message: `You have been assigned application #${applicationId}`,
-  type: "APPLICATION_ASSIGNMENT",
-  metadata: { applicationId }
-});
+    userId: managerId,
+    title: "New Application Assigned",
+    message: `You have been assigned application #${applicationId}`,
+    type: "APPLICATION_ASSIGNMENT",
+    metadata: { applicationId },
+  });
 
   return await VisaApplicationRepository.findByIdWithPopulate(applicationId);
 };
@@ -356,7 +422,43 @@ const applicationUpdateByManager = async (
     payload,
   );
 
+  // ✅ Activity Log
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(managerId),
+    actorRole: Role.MANAGER,
+    action: "MANAGER_UPDATE_APPLICATION",
+    entityType: "VisaApplication",
+    entityId: new Types.ObjectId(applicationId),
+    message: `Manager updated application তথ্য`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
+
   return updated;
+};
+
+const deleteVisaApplication = async (id: string) => {
+  const deleted = await VisaApplicationRepository.deleteById(id);
+
+  if (!deleted)
+    throw new AppError(StatusCodes.NOT_FOUND, "visa application not found");
+  await VisaApplicationRepository.deleteById(id);
+
+  // ✅ Activity Log
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(deleted.userId),
+    actorRole: Role.USER,
+    action: "DELETE_APPLICATION",
+    entityType: "VisaApplication",
+    entityId: new Types.ObjectId(id),
+    message: `Visa application deleted`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
+
+  return deleted;
 };
 export const VisaApplicationService = {
   createVisaApplication,
