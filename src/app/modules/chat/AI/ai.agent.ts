@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import OpenAI from "openai";
 
 import { envVar } from "../../../config/EnvVar";
