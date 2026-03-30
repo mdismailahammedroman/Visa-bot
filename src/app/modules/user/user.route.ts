@@ -84,6 +84,10 @@ router.patch(
   checkAuth(...Object.values(Role)),
   userController.toggleEmailNotification
 );
-
+router.delete(
+  "/:userId",
+  checkAuth(Role.ADMIN),
+  userController.deleteUserByAdmin,
+);
 
 export const userRouter = router;
