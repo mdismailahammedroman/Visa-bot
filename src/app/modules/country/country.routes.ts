@@ -40,4 +40,12 @@ router.patch(
   CountryController.updateCountry,
 );
 
+
+router.delete(
+  "/:id",
+  checkAuth(Role.MAIN_MANAGER, Role.ADMIN),
+  CountryController.deleteCountry,
+);
+
+
 export const countryRouter = router;

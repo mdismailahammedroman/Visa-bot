@@ -227,6 +227,19 @@ const updateCurrency = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteUserByAdmin = CatchAsync(async (req: Request, res: Response) => {
+  const adminUser = req.user as any;
+  const { userId } = req.params;
+
+  await userService.deleteUserByAdmin(adminUser, userId as string);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "User account deleted successfully",
+    data: null,
+  });
+});
 
 // userController/
 
@@ -243,4 +256,5 @@ export const userController = {
   togglePushNotification,
   toggleEmailNotification,
   updateCurrency,
+  deleteUserByAdmin,
 };

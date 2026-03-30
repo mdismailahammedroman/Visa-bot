@@ -19,6 +19,9 @@ const updateById = (id: string, payload: Partial<ICountry>) =>
     runValidators: true,
   });
 
+  const deleteById = (id: string) =>
+  CountryModel.findByIdAndDelete(id);
+
 export const CountryRepository = {
   create,
   findByName,
@@ -26,4 +29,5 @@ export const CountryRepository = {
   findAll,
   findById,
   updateById,
+  deleteById,
 };

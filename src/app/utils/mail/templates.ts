@@ -7,7 +7,19 @@ export const renderTemplate = (
   templateName: string,
   data: Record<string, any>,
 ) => {
-  const filePath = path.join(__dirname, "templates", `${templateName}.hbs`);
+  let filePath = path.join(__dirname, "templates", `${templateName}.hbs`);
+
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(
+      process.cwd(),
+      "src",
+      "app",
+      "utils",
+      "mail",
+      "templates",
+      `${templateName}.hbs`,
+    );
+  }
 
   if (!fs.existsSync(filePath)) {
     throw new Error(`Template not found: ${filePath}`);

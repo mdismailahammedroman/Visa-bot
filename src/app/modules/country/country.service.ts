@@ -91,9 +91,20 @@ const getCountryById = async (id: string, liveRate?: boolean) => {
   return country;
 };
 
+const deleteCountry = async (id: string) => {
+  const deleted = await CountryRepository.deleteById(id);
+
+  if (!deleted) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Country not found");
+  }
+
+  return deleted;
+};
+
 export const CountryService = {
   createCountry,
   getAllCountries,
   updateCountry,
   getCountryById,
+  deleteCountry,
 };
