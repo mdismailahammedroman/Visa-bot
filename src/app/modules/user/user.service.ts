@@ -285,6 +285,47 @@ const deleteMyAccount = async (userId: string) => {
   return null;
 };
 
+
+const deleteUserByAdmin = async (adminUser: IUser, userId: string) => {
+  if (adminUser.role !== Role.ADMIN) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Only admin can delete other user accounts",
+    );
+  }
+
+  const targetUser = await userRepository.findById(userId);
+
+  if (!targetUser) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  // optional safety
+  if (targetUser._id.toString() === adminUser._id.toString()) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Use delete-account route to delete your own account",
+    );
+  }
+
+  await userRepository.deleteUserById(userId);
+
+  await ActivityLogService.logActivity({
+    actorId: new Types.ObjectId(adminUser._id),
+    actorRole: adminUser.role,
+    action: "DELETE_USER",
+    entityType: "User",
+    entityId: new Types.ObjectId(targetUser._id),
+    message: `Admin ${adminUser.email} deleted user ${targetUser.email}`,
+    status: "SUCCESS",
+    ip: "",
+    userAgent: "",
+  });
+
+  return null;
+};
+
+
 const saveFCMToken = async (userId: string, fcmToken: string) => {
   const user = await userRepository.findById(userId);
 
@@ -361,6 +402,7 @@ export const userService = {
   changeUserStatus,
   changeUserRole,
   deleteMyAccount,
+  deleteUserByAdmin,
   saveFCMToken,
   toggleEmail,
   togglePush,

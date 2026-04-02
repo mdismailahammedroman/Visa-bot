@@ -57,9 +57,21 @@ const updateCountry = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteCountry = CatchAsync(async (req: Request, res: Response) => {
+  const result = await CountryService.deleteCountry(req.params.id as string);
+
+  return sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Country deleted successfully",
+    data: result,
+  });
+});
+
 export const CountryController = {
   createCountry,
   getCountries,
   getCountry,
   updateCountry,
+  deleteCountry,
 };

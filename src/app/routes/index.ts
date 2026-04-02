@@ -12,6 +12,7 @@ import { chatRoute } from "../modules/chat/chat.route";
 import { feedbackRoute } from "../modules/Feedback/feedback.route";
 import { newsletterRouter } from "../modules/newsletter/newsletter.route";
 import { activityLogRoute } from "../modules/activity/activityLog.route";
+import { dashboardRoute } from "../modules/dashboard/dashboard.route";
 
 export const router = Router();
 
@@ -46,8 +47,8 @@ const routes = [
     route: notificationRoute,
   },
   {
-    path:"/payment",
-    route:visaPaymentRouter,
+    path: "/payment",
+    route: visaPaymentRouter,
   },
   {
     path: "/chat",
@@ -59,11 +60,15 @@ const routes = [
   },
   {
     path: "/newsletter",
-    route: newsletterRouter ,
+    route: newsletterRouter,
   },
   {
     path: "/activitylogs",
-    route: activityLogRoute ,
+    route: activityLogRoute,
+  },
+  {
+    path: "/dashboard",
+    route: dashboardRoute,
   },
 ];
 routes.forEach((route) => {

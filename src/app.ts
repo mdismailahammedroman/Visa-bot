@@ -49,7 +49,9 @@ app.set("trust proxy", 1);
 ================================= */
 app.use(
   cors({
-    origin: envVar.FRONTEND_URL,
+    origin: [envVar.FRONTEND_URL,
+       "https://elflike-snoopy-ernie.ngrok-free.dev" 
+    ],
     credentials: true,
   })
 );

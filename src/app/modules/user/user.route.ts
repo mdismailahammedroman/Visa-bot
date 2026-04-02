@@ -34,7 +34,7 @@ router.get(
 // ✅ Get all users (admin/manager)
 router.get(
   "/all-users",
-  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER, ),
+  checkAuth(Role.ADMIN, Role.MAIN_MANAGER, Role.MANAGER),
   userController.getAllUsers,
 );
 
@@ -75,15 +75,19 @@ router.delete(
 router.patch(
   "/notification/push",
   checkAuth(...Object.values(Role)),
-  userController.togglePushNotification
+  userController.togglePushNotification,
 );
 
 // 📧 Email Notification Toggle
 router.patch(
   "/notification/email",
   checkAuth(...Object.values(Role)),
-  userController.toggleEmailNotification
+  userController.toggleEmailNotification,
 );
-
+router.delete(
+  "/delete/:userId",
+  checkAuth(Role.ADMIN),
+  userController.deleteUserByAdmin,
+);
 
 export const userRouter = router;
